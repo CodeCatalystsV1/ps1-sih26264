@@ -1,0 +1,454 @@
+import sys
+import os
+from datetime import datetime, timedelta, timezone
+
+# Ensure project root is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from backend.app.core.database import SessionLocal, engine, Base
+import backend.app.models # Discover models
+from backend.app.models.entities import (
+    Role, Permission, Bureau, Region, User, UserBureauAssignment,
+    Institution, ComplaintCategory, CaseStatus, CaseTransition,
+    Complaint, Case, ComplaintCaseLink, Assignment, Transfer,
+    WorkflowHistory, SLARule, Notification, NotificationRecipient,
+    OverlapFlag, CaseRelationship, CoordinationDecision
+)
+from backend.app.core.security import get_password_hash
+from backend.app.services.overlap_service import detect_overlaps_for_institution
+
+def seed_database():
+    print("Initializing Database schema...")
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+
+    try:
+        now = datetime.now(timezone.utc)
+
+        # 1. Seed Roles
+        roles_data = [
+            ("ROLE_ADMIN", "System Administrator", "Full administrative control and user management"),
+            ("ROLE_PGRC_OFFICER", "PGRC Officer", "Processes grievances within Public Grievance Redressal Cell"),
+            ("ROLE_RB_OFFICER", "Regulation Bureau Officer", "Processes compliance cases within Regulation Bureau"),
+            ("ROLE_BUREAU_HEAD", "Bureau Head / Supervisor", "Supervises bureau workload, reassignments, and transfers"),
+            ("ROLE_REGIONAL_OFFICE", "Regional Office User", "Monitors institutions and cases within assigned region"),
+            ("ROLE_MANAGEMENT", "Competent Authority / Management", "Monitors high-level consolidated executive dashboards"),
+            ("ROLE_COMPLAINANT", "Complainant", "Submits and tracks permitted grievance status"),
+        ]
+        roles_map = {}
+        for code, name, desc in roles_data:
+            role = db.query(Role).filter(Role.code == code).first()
+            if not role:
+                role = Role(code=code, name=name, description=desc)
+                db.add(role)
+                db.flush()
+            roles_map[code] = role
+        print("[OK] Roles seeded.")
+
+        # 2. Seed Bureaus
+        bureaus_data = [
+            ("PGRC", "Public Grievance Redressal Cell", "Dedicated cell for public and stakeholder grievances"),
+            ("RB", "Regulation Bureau", "Oversees statutory compliance, regulations, and norms"),
+            ("AB", "Approval Bureau", "Processes institutional extension of approvals and accreditations"),
+            ("FB", "Finance Bureau", "Handles scholarships, grants, and financial grievance inquiries")
+        ]
+        bureaus_map = {}
+        for code, name, desc in bureaus_data:
+            bureau = db.query(Bureau).filter(Bureau.code == code).first()
+            if not bureau:
+                bureau = Bureau(code=code, name=name, description=desc, active=True)
+                db.add(bureau)
+                db.flush()
+            bureaus_map[code] = bureau
+        print("[OK] Bureaus seeded.")
+
+        # 3. Seed Regions
+        regions_data = [
+            ("NRO", "Northern Region", "Kanpur", True),
+            ("WRO", "Western Region", "Mumbai", True),
+            ("SRO", "Southern Region", "Chennai", True),
+            ("ERO", "Eastern Region", "Kolkata", True),
+        ]
+        regions_map = {}
+        for code, name, office, active in regions_data:
+            region = db.query(Region).filter(Region.code == code).first()
+            if not region:
+                region = Region(code=code, name=name, regional_office=office, active=active)
+                db.add(region)
+                db.flush()
+            regions_map[code] = region
+        print("[OK] Regions seeded.")
+
+        # 4. Seed Users
+        users_data = [
+            ("admin", "admin@aicte.gov.in.demo", "Admin@123", "Dr. Rajesh Kumar (Admin)", "ROLE_ADMIN", None, None),
+            ("pgrc_officer", "pgrc.officer@aicte.gov.in.demo", "Pgrc@123", "Shri Arvind Sharma (PGRC)", "ROLE_PGRC_OFFICER", "PGRC", None),
+            ("rb_officer", "rb.officer@aicte.gov.in.demo", "Rb@123", "Smt. Sunita Verma (RB)", "ROLE_RB_OFFICER", "RB", None),
+            ("bureau_head", "bureau.head@aicte.gov.in.demo", "Head@123", "Dr. Vikramaditya Rao (Bureau Head)", "ROLE_BUREAU_HEAD", "PGRC", None),
+            ("ro_northern", "ro.kanpur@aicte.gov.in.demo", "Ro@123", "Shri R. K. Mishra (RO Kanpur)", "ROLE_REGIONAL_OFFICE", None, "NRO"),
+            ("competent_authority", "authority@aicte.gov.in.demo", "Auth@123", "Member Secretary (Competent Authority)", "ROLE_MANAGEMENT", None, None),
+            ("complainant_user", "citizen@example.com.demo", "Citizen@123", "Aakash Patel (Student/Citizen)", "ROLE_COMPLAINANT", None, None),
+        ]
+        users_map = {}
+        for username, email, pwd, display, role_code, b_code, r_code in users_data:
+            user = db.query(User).filter(User.username == username).first()
+            if not user:
+                user = User(
+                    username=username,
+                    email=email,
+                    display_name=display,
+                    password_hash=get_password_hash(pwd),
+                    account_status="ACTIVE",
+                    phone="9876543210"
+                )
+                user.roles.append(roles_map[role_code])
+                db.add(user)
+                db.flush()
+
+                if b_code or r_code:
+                    ba = UserBureauAssignment(
+                        user_id=user.id,
+                        bureau_id=bureaus_map[b_code].id if b_code else None,
+                        region_id=regions_map[r_code].id if r_code else None
+                    )
+                    db.add(ba)
+                    db.flush()
+            users_map[username] = user
+        print("[OK] Demo Users seeded.")
+
+        # 5. Seed Complaint Categories
+        cats_data = [
+            ("Academic & Regulatory Matters", "CAT_ACAD", "Curriculum, exams, faculty recruitment, regulatory violations"),
+            ("Institutional Compliance & Approvals", "CAT_COMPL", "Building norms, lab facilities, unauthorized admissions"),
+            ("Student Welfare & Fee Disputes", "CAT_STUDENT", "Capitation fees, withholding certificates, harassment"),
+            ("Faculty & Staff Grievances", "CAT_FACULTY", "Pay scale discrepancies, irregular termination, PF non-deposit"),
+            ("Infrastructure & Laboratory Facilities", "CAT_INFRA", "Deficient computing facilities, fire safety, library books"),
+        ]
+        cats_map = {}
+        for name, code, desc in cats_data:
+            cat = db.query(ComplaintCategory).filter(ComplaintCategory.code == code).first()
+            if not cat:
+                cat = ComplaintCategory(name=name, code=code, description=desc, active=True)
+                db.add(cat)
+                db.flush()
+            cats_map[code] = cat
+        print("[OK] Complaint Categories seeded.")
+
+        # 6. Seed Configurable SLA Rules
+        sla_data = [
+            ("PGRC Standard Grievance Resolution", "PGRC", "CAT_STUDENT", 30, 5, 2),
+            ("Regulation Bureau Statutory Compliance Notice", "RB", "CAT_COMPL", 21, 4, 2),
+            ("Faculty Pay & Service Verification", "PGRC", "CAT_FACULTY", 45, 7, 3),
+            ("General Institutional Scrutiny Default", None, None, 30, 5, 2),
+        ]
+        for r_name, b_code, c_code, dur, rem, esc in sla_data:
+            existing_rule = db.query(SLARule).filter(SLARule.rule_name == r_name).first()
+            if not existing_rule:
+                rule = SLARule(
+                    rule_name=r_name,
+                    bureau_id=bureaus_map[b_code].id if b_code else None,
+                    category_id=cats_map[c_code].id if c_code else None,
+                    duration_days=dur,
+                    reminder_threshold_days=rem,
+                    escalation_threshold_days=esc,
+                    enabled=True,
+                    effective_from=now
+                )
+                db.add(rule)
+        db.flush()
+        print("[OK] SLA Rules seeded.")
+
+        # 7. Seed Fictional Institutions
+        institutions_data = [
+            ("DEMO-AICTE-001", "Demo Institute A — Technology & Science", "Engineering & Technology", "Knowledge City, Sector 62", "Noida", "Gautam Buddha Nagar", "Uttar Pradesh", "NRO", "Kanpur", "201301", "contact@demo-inst-a.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-002", "Demo Institute B — College of Engineering", "Engineering & Technology", "University Road, Shivaji Nagar", "Pune", "Pune", "Maharashtra", "WRO", "Mumbai", "411005", "info@demo-inst-b.edu.in", "VERIFIED"),
+            ("DEMO-AICTE-003", "Demo Institute C — Institute of Management & Technology", "Management", "Old Mahabalipuram Road", "Chennai", "Chennai", "Tamil Nadu", "SRO", "Chennai", "600096", "registrar@demo-inst-c.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-004", "Demo Institute D — Polytechnic & Technical Studies", "Polytechnic", "Bidhannagar Sector V", "Kolkata", "North 24 Parganas", "West Bengal", "ERO", "Kolkata", "700091", "admin@demo-inst-d.org", "VERIFIED"),
+            ("DEMO-AICTE-005", "Demo Institute E — Global College of Pharmacy", "Pharmacy", "Malviya Nagar Extension", "Jaipur", "Jaipur", "Rajasthan", "NRO", "Kanpur", "302017", "pharmacy@demo-inst-e.ac.in", "VERIFIED"),
+        ]
+        insts_map = {}
+        for perm_id, name, itype, addr, city, dist, state, r_code, roffice, pin, mail, v_status in institutions_data:
+            inst = db.query(Institution).filter(Institution.permanent_id == perm_id).first()
+            if not inst:
+                inst = Institution(
+                    permanent_id=perm_id,
+                    institution_name=name,
+                    institution_type=itype,
+                    address=addr,
+                    city=city,
+                    district=dist,
+                    state=state,
+                    region_id=regions_map[r_code].id,
+                    regional_office=roffice,
+                    postal_code=pin,
+                    contact_email=mail,
+                    contact_phone="011-23456789",
+                    verification_status=v_status,
+                    record_status="ACTIVE",
+                    created_by=users_map["admin"].id
+                )
+                db.add(inst)
+                db.flush()
+            insts_map[perm_id] = inst
+        print("[OK] Fictional Institutions seeded.")
+
+        # 8. SEED SPECIFIC OVERLAP SCENARIO FOR DEMO INSTITUTE A
+        # Prompt Requirement:
+        # Case 1: PGRC case in active status "Under Verification"
+        # Case 2: Regulation Bureau (RB) case in active status "Under Scrutiny"
+        # Associate both with DEMO-AICTE-001. Different handling Bureaus.
+        inst_a = insts_map["DEMO-AICTE-001"]
+
+        # Complaint 1 for Inst A
+        c1 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0001").first()
+        if not c1:
+            c1 = Complaint(
+                complaint_reference="CMP-2026-0001",
+                title="Allegation of capitation fee collection during B.Tech admissions",
+                description="Complainant alleges that the institution requested an unreceipted development fee of Rs. 1,50,000 in cash during document verification.",
+                complainant_id=users_map["complainant_user"].id,
+                institution_id=inst_a.id,
+                category_id=cats_map["CAT_STUDENT"].id,
+                complainant_type="STUDENT",
+                source="PORTAL",
+                received_at=now - timedelta(days=12),
+                status="CASE_LINKED",
+                sensitivity_classification="NORMAL",
+                assigned_bureau_id=bureaus_map["PGRC"].id,
+                created_by=users_map["complainant_user"].id
+            )
+            db.add(c1)
+            db.flush()
+
+        # Case 1 for Inst A (PGRC - Under Verification)
+        case1 = db.query(Case).filter(Case.case_reference == "CASE-2026-0001").first()
+        if not case1:
+            case1 = Case(
+                case_reference="CASE-2026-0001",
+                institution_id=inst_a.id,
+                current_bureau_id=bureaus_map["PGRC"].id,
+                current_officer_id=users_map["pgrc_officer"].id,
+                title="Grievance: Capitation Fee Dispute (B.Tech Admissions)",
+                category="Student Welfare & Fee Disputes",
+                status="Under Verification",
+                priority="HIGH",
+                received_at=now - timedelta(days=12),
+                last_action="Institution reply received; seeking bank transaction proof from complainant",
+                last_action_at=now - timedelta(days=2),
+                next_action="Reconciliation of fee accounts by scrutiny committee",
+                applicable_deadline_at=now + timedelta(days=18),
+                created_by=users_map["pgrc_officer"].id
+            )
+            db.add(case1)
+            db.flush()
+
+            link1 = ComplaintCaseLink(complaint_id=c1.id, case_id=case1.id, link_type="PRIMARY", created_by=users_map["admin"].id)
+            db.add(link1)
+
+            assign1 = Assignment(
+                case_id=case1.id,
+                bureau_id=bureaus_map["PGRC"].id,
+                officer_id=users_map["pgrc_officer"].id,
+                assigned_by=users_map["bureau_head"].id,
+                assigned_at=now - timedelta(days=11),
+                reason="Assigned to senior grievance officer for financial compliance review",
+                assignment_status="ACTIVE"
+            )
+            db.add(assign1)
+
+            wf1 = WorkflowHistory(
+                institution_id=inst_a.id,
+                case_id=case1.id,
+                action_type="STATUS_CHANGE",
+                previous_value="Assigned",
+                new_value="Under Verification",
+                remarks="Institution provided initial audited statements; under officer verification",
+                performed_by=users_map["pgrc_officer"].id,
+                created_at=now - timedelta(days=2)
+            )
+            db.add(wf1)
+
+        # Complaint 2 for Inst A (Different issue, handled by Regulation Bureau)
+        c2 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0002").first()
+        if not c2:
+            c2 = Complaint(
+                complaint_reference="CMP-2026-0002",
+                title="Inspection report discrepancy regarding mandatory laboratory equipment & cadre ratio",
+                description="Regulatory inspection indicates artificial faculty roster presentation and deficient lab equipment in Electronics department.",
+                complainant_id=None,
+                institution_id=inst_a.id,
+                category_id=cats_map["CAT_COMPL"].id,
+                complainant_type="STAFF",
+                source="CPGRAMS",
+                received_at=now - timedelta(days=8),
+                status="CASE_LINKED",
+                sensitivity_classification="HIGH_PRIORITY",
+                assigned_bureau_id=bureaus_map["RB"].id,
+                created_by=users_map["admin"].id
+            )
+            db.add(c2)
+            db.flush()
+
+        # Case 2 for Inst A (Regulation Bureau - Under Scrutiny)
+        case2 = db.query(Case).filter(Case.case_reference == "CASE-2026-0002").first()
+        if not case2:
+            case2 = Case(
+                case_reference="CASE-2026-0002",
+                institution_id=inst_a.id,
+                current_bureau_id=bureaus_map["RB"].id,
+                current_officer_id=users_map["rb_officer"].id,
+                title="Regulatory Compliance Scrutiny: Faculty Cadre Ratio & Lab Facilities",
+                category="Institutional Compliance & Approvals",
+                status="Under Scrutiny",
+                priority="URGENT",
+                received_at=now - timedelta(days=8),
+                last_action="Show-cause notice drafted for missing laboratory apparatus",
+                last_action_at=now - timedelta(days=1),
+                next_action="Issue formal notice under AICTE Approval Process Handbook regulations",
+                applicable_deadline_at=now + timedelta(days=13),
+                created_by=users_map["rb_officer"].id
+            )
+            db.add(case2)
+            db.flush()
+
+            link2 = ComplaintCaseLink(complaint_id=c2.id, case_id=case2.id, link_type="PRIMARY", created_by=users_map["admin"].id)
+            db.add(link2)
+
+            assign2 = Assignment(
+                case_id=case2.id,
+                bureau_id=bureaus_map["RB"].id,
+                officer_id=users_map["rb_officer"].id,
+                assigned_by=users_map["admin"].id,
+                assigned_at=now - timedelta(days=7),
+                reason="Allocated to Regulation Bureau compliance desk",
+                assignment_status="ACTIVE"
+            )
+            db.add(assign2)
+
+            wf2 = WorkflowHistory(
+                institution_id=inst_a.id,
+                case_id=case2.id,
+                action_type="STATUS_CHANGE",
+                previous_value="Received",
+                new_value="Under Scrutiny",
+                remarks="Case registered and assigned for regulatory scrutiny",
+                performed_by=users_map["rb_officer"].id,
+                created_at=now - timedelta(days=1)
+            )
+            db.add(wf2)
+
+        # 9. Additional realistic cases for other demo institutes
+        # Inst B: Overdue case demonstration
+        inst_b = insts_map["DEMO-AICTE-002"]
+        case3 = db.query(Case).filter(Case.case_reference == "CASE-2026-0003").first()
+        if not case3:
+            case3 = Case(
+                case_reference="CASE-2026-0003",
+                institution_id=inst_b.id,
+                current_bureau_id=bureaus_map["PGRC"].id,
+                current_officer_id=users_map["pgrc_officer"].id,
+                title="Non-refund of caution deposit to graduated students",
+                category="Student Welfare & Fee Disputes",
+                status="Awaiting Response",
+                priority="MEDIUM",
+                received_at=now - timedelta(days=40),
+                last_action="Reminder letter sent to registrar regarding deposit refund",
+                last_action_at=now - timedelta(days=15),
+                next_action="Issue final directive before withholding approval extension",
+                applicable_deadline_at=now - timedelta(days=5), # OVERDUE!
+                escalation_status="OVERDUE",
+                created_by=users_map["admin"].id
+            )
+            db.add(case3)
+            db.flush()
+
+        # Inst C: Disposed Case demonstration
+        inst_c = insts_map["DEMO-AICTE-003"]
+        case4 = db.query(Case).filter(Case.case_reference == "CASE-2026-0004").first()
+        if not case4:
+            case4 = Case(
+                case_reference="CASE-2026-0004",
+                institution_id=inst_c.id,
+                current_bureau_id=bureaus_map["PGRC"].id,
+                current_officer_id=users_map["pgrc_officer"].id,
+                title="Delay in release of AICTE PG scholarship disbursal",
+                category="Academic & Regulatory Matters",
+                status="Disposed",
+                priority="LOW",
+                received_at=now - timedelta(days=25),
+                last_action="Scholarship DBT processed; complainant confirmed receipt in bank account",
+                last_action_at=now - timedelta(days=3),
+                next_action=None,
+                applicable_deadline_at=now + timedelta(days=5),
+                created_by=users_map["admin"].id
+            )
+            db.add(case4)
+            db.flush()
+
+        # Inst D: Transferred case demonstration
+        inst_d = insts_map["DEMO-AICTE-004"]
+        case5 = db.query(Case).filter(Case.case_reference == "CASE-2026-0005").first()
+        if not case5:
+            case5 = Case(
+                case_reference="CASE-2026-0005",
+                institution_id=inst_d.id,
+                current_bureau_id=bureaus_map["RB"].id,
+                current_officer_id=users_map["rb_officer"].id,
+                title="Irregular intake expansion beyond approved AICTE sanction",
+                category="Institutional Compliance & Approvals",
+                status="Transferred",
+                priority="HIGH",
+                received_at=now - timedelta(days=18),
+                last_action="Transferred from PGRC to Regulation Bureau due to statutory jurisdiction",
+                last_action_at=now - timedelta(days=4),
+                next_action="Re-verification of seat matrix",
+                applicable_deadline_at=now + timedelta(days=10),
+                created_by=users_map["pgrc_officer"].id
+            )
+            db.add(case5)
+            db.flush()
+
+            trans1 = Transfer(
+                case_id=case5.id,
+                from_bureau_id=bureaus_map["PGRC"].id,
+                to_bureau_id=bureaus_map["RB"].id,
+                from_officer_id=users_map["pgrc_officer"].id,
+                to_officer_id=users_map["rb_officer"].id,
+                initiated_by=users_map["bureau_head"].id,
+                transfer_reason="Matter involves statutory sanction limits governed under Regulation Bureau charter rather than individual grievance.",
+                transferred_at=now - timedelta(days=4),
+                receiving_status="ACCEPTED",
+                receiving_remarks="Accepted by Regulation Bureau desk for regulatory audit"
+            )
+            db.add(trans1)
+
+        db.commit()
+
+        # 10. Execute Real Overlap Detection Logic for all institutions
+        print("Executing deterministic cross-bureau overlap detection engine...")
+        for inst in db.query(Institution).all():
+            detect_overlaps_for_institution(db, inst.id)
+        db.commit()
+
+        print("\n=======================================================")
+        print("[OK] AICTE ICMS Database seeding completed successfully!")
+        print("=======================================================")
+        print("Fictional Demonstration Accounts:")
+        print("1. System Administrator:    admin               / Admin@123")
+        print("2. PGRC Officer:            pgrc_officer        / Pgrc@123")
+        print("3. Regulation Bureau Off:   rb_officer          / Rb@123")
+        print("4. Bureau Head/Supervisor:  bureau_head         / Head@123")
+        print("5. Regional User (Kanpur):  ro_northern         / Ro@123")
+        print("6. Competent Authority:     competent_authority / Auth@123")
+        print("7. Complainant (Citizen):   complainant_user    / Citizen@123")
+        print("=======================================================\n")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error seeding database: {e}")
+        raise
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    seed_database()
