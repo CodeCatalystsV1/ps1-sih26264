@@ -225,3 +225,82 @@ def test_reports_and_exports():
     pdf_res = client.get("/api/reports/export?format=pdf", headers=headers)
     assert pdf_res.status_code == 200
     assert b"%PDF" in pdf_res.content[:10]
+
+def test_unauthorized_complainant_cannot_access_audit_or_modify_cases():
+    login_res = client.post("/api/auth/login", json={
+        "username_or_email": "complainant_user",
+        "password": "Citizen@123"
+    })
+    assert login_res.status_code == 200
+    headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
+
+    # Complainant attempts to view audit trail
+    audit_res = client.get("/api/audit", headers=headers)
+    assert audit_res.status_code == 403
+
+    # Complainant attempts to change case status
+    status_res = client.post(
+        "/api/cases/1/status",
+        headers=headers,
+        json={"new_status": "Action Taken", "remarks": "Unauthorized attempt"}
+    )
+    assert status_res.status_code == 403
+
+def test_cross_bureau_case_modification_forbidden():
+    # RB officer belongs to Regulation Bureau (bureau 2)
+    login_res = client.post("/api/auth/login", json={
+        "username_or_email": "rb_officer",
+        "password": "Rb@123"
+    })
+    assert login_res.status_code == 200
+    headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
+
+    # Find a case currently in PGRC (bureau 1)
+    admin_login = client.post("/api/auth/login", json={"username_or_email": "admin", "password": "Admin@123"})
+    admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+    cases = client.get("/api/cases?bureau_id=1", headers=admin_headers).json()
+    assert len(cases) > 0
+    pgrc_case_id = cases[0]["id"]
+
+    # RB officer attempts to update status of PGRC case -> 403 Forbidden
+    res = client.post(
+        f"/api/cases/{pgrc_case_id}/status",
+        headers=headers,
+        json={"new_status": "Acknowledged", "remarks": "Cross-bureau modification attempt"}
+    )
+    assert res.status_code == 403
+    assert "outside your assigned Bureau" in res.json()["detail"]
+
+def test_production_config_secret_validation():
+    from backend.app.core.config import Settings
+    import pytest
+
+    # Insecure default secret in production raises RuntimeError
+    with pytest.raises(RuntimeError) as exc_info:
+        bad_settings = Settings(
+            ENVIRONMENT="production",
+            SECRET_KEY="aicte_icms_dev_secret_key_change_in_production_min_32_chars_2026"
+        )
+        bad_settings.validate_production_security()
+    assert "CRITICAL SECURITY CONFIGURATION ERROR" in str(exc_info.value)
+
+    # Valid secret in production passes
+    good_settings = Settings(
+        ENVIRONMENT="production",
+        SECRET_KEY="a_very_secure_high_entropy_production_jwt_key_2026_xyz!"
+    )
+    good_settings.validate_production_security()
+
+def test_institution_update_duplicate_permanent_id_rejected():
+    login_res = client.post("/api/auth/login", json={"username_or_email": "admin", "password": "Admin@123"})
+    headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
+
+    # Attempt to update Institution 2's permanent ID to DEMO-AICTE-001 (which belongs to Institution 1)
+    res = client.put(
+        "/api/institutions/2",
+        headers=headers,
+        json={"permanent_id": "DEMO-AICTE-001"}
+    )
+    assert res.status_code == 400
+    assert "already exists" in res.json()["detail"]
+

@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { Shield, ExternalLink } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -9,21 +10,43 @@ export const AppLayout: React.FC = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 overflow-y-auto bg-gov-bg">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             <Outlet />
           </div>
         </main>
       </div>
-      <footer className="bg-slate-900 border-t border-slate-800 text-slate-400 py-3 px-6 text-xs text-center flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-300">AICTE ICMS Platform</span>
-          <span>— Smart India Hackathon Prototype (Problem Statement PS-264)</span>
-        </div>
-        <div className="text-[11px] text-slate-400">
-          Integrated Institution Complaint Monitoring and Coordination System &bull; Confidential &bull; For Authorized Evaluators Only
+
+      {/* Official Government Administrative Portal Footer */}
+      <footer className="bg-gov-dark text-slate-300 border-t border-slate-700/80 py-3.5 px-4 sm:px-8 text-xs shrink-0 select-none">
+        <div className="w-full max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+          <div className="flex items-center gap-2.5 flex-wrap justify-center md:justify-start">
+            <span className="font-semibold text-white tracking-wide">
+              अखिल भारतीय तकनीकी शिक्षा परिषद (AICTE)
+            </span>
+            <span className="text-slate-500 hidden sm:inline">&bull;</span>
+            <span className="text-slate-300 font-medium">
+              Ministry of Education, Government of India
+            </span>
+            <span className="text-slate-500 hidden sm:inline">&bull;</span>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+              PS-264 Demonstration
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-[11px] text-slate-400 flex-wrap justify-center md:justify-end">
+            <span className="flex items-center gap-1.5 text-slate-400">
+              <Shield className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Official Administrative Interface</span>
+            </span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
+            <span className="text-slate-400 font-mono">v2.4-PROTOTYPE</span>
+            <span className="text-slate-600 hidden sm:inline">|</span>
+            <span className="text-slate-400">Strictly for Evaluation Purposes</span>
+          </div>
         </div>
       </footer>
     </div>
   );
 };
+

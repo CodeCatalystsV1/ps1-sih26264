@@ -61,99 +61,116 @@ export const InstitutionDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+        <Link to="/" className="hover:text-gov-primary">Dashboard</Link>
+        <span>&rsaquo;</span>
+        <Link to="/institutions" className="hover:text-gov-primary">Institutions Registry</Link>
+        <span>&rsaquo;</span>
+        <span className="text-slate-800 font-semibold">{institution.permanent_id}</span>
+      </div>
+
       {/* Consolidated Profile Header */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="gov-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gov-border pb-5">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-lg bg-gov-primary text-white flex items-center justify-center shrink-0 shadow-inner">
-              <Building className="w-8 h-8 text-amber-400" />
+            <div className="w-13 h-13 rounded-md bg-gradient-to-br from-gov-primary to-gov-dark text-white flex items-center justify-center shrink-0 shadow-sm border border-slate-600">
+              <Building className="w-7 h-7 text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl font-bold text-slate-900">{institution.institution_name}</h1>
-                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-gov-secondary text-white">
-                  Permanent ID: {institution.permanent_id}
+                <h1 className="text-xl sm:text-2xl font-bold text-gov-dark">{institution.institution_name}</h1>
+                <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-gov-secondary text-white shadow-xs">
+                  {institution.permanent_id}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                <span className="gov-badge gov-badge-success">
                   <ShieldCheck className="w-3.5 h-3.5" /> {institution.verification_status}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
-                <span className="flex items-center gap-1">
+              <p className="text-xs text-slate-600 mt-1.5 flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1 text-slate-700 font-medium">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  {institution.city}, {institution.district}, {institution.state} ({institution.postal_code})
+                  {institution.city}, {institution.district}, {institution.state} &bull; PIN: {institution.postal_code}
                 </span>
-                <span>&bull;</span>
-                <span>Type: <strong>{institution.institution_type}</strong></span>
-                <span>&bull;</span>
-                <span>Region: <strong>{institution.region?.name || 'Regional Office'}</strong></span>
+                <span className="text-slate-300">&bull;</span>
+                <span>Category: <strong className="text-slate-800">{institution.institution_type}</strong></span>
+                <span className="text-slate-300">&bull;</span>
+                <span>Jurisdiction: <strong className="text-slate-800">{institution.region?.name || 'Central Head Office'}</strong></span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
               to={`/complaints/new?institution_id=${institution.id}`}
-              className="px-3 py-1.5 bg-gov-primary hover:bg-gov-dark text-white rounded text-xs font-semibold shadow-sm transition-colors"
+              className="gov-btn gov-btn-primary"
             >
-              + Register Complaint
+              <span>+ Register Complaint</span>
             </Link>
           </div>
         </div>
 
-        {/* 4 Metric Chips */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="p-3 bg-slate-50 rounded border border-slate-200">
-            <span className="text-[11px] font-semibold text-slate-500 block uppercase">Total Complaints</span>
-            <span className="text-xl font-bold text-slate-900">{institution.total_complaints}</span>
+        {/* 4 Metric Summary Chips */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-5">
+          <div className="p-3.5 bg-slate-50 rounded-md border border-gov-border">
+            <span className="text-[11px] font-bold text-slate-500 block uppercase tracking-wider">Total Complaints</span>
+            <span className="text-2xl font-bold text-gov-dark font-mono mt-1 block">{institution.total_complaints}</span>
+            <span className="text-[10px] text-slate-400">All-time received</span>
           </div>
-          <div className="p-3 bg-blue-50/50 rounded border border-blue-200">
-            <span className="text-[11px] font-semibold text-blue-700 block uppercase">Active Cases</span>
-            <span className="text-xl font-bold text-blue-900">{institution.active_cases}</span>
+          <div className="p-3.5 bg-blue-50/50 rounded-md border border-blue-200">
+            <span className="text-[11px] font-bold text-gov-info block uppercase tracking-wider">Active Cases</span>
+            <span className="text-2xl font-bold text-gov-primary font-mono mt-1 block">{institution.active_cases}</span>
+            <span className="text-[10px] text-blue-600/80">Under formal inquiry</span>
           </div>
-          <div className="p-3 bg-red-50/50 rounded border border-red-200">
-            <span className="text-[11px] font-semibold text-red-700 block uppercase">Overdue Cases</span>
-            <span className="text-xl font-bold text-red-900">{institution.overdue_cases}</span>
+          <div className="p-3.5 bg-red-50/50 rounded-md border border-red-200">
+            <span className="text-[11px] font-bold text-gov-danger block uppercase tracking-wider">Overdue SLA</span>
+            <span className="text-2xl font-bold text-red-900 font-mono mt-1 block">{institution.overdue_cases}</span>
+            <span className="text-[10px] text-red-600/80">Exceeded statutory limit</span>
           </div>
-          <div className={`p-3 rounded border ${hasOverlap ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
-            <span className="text-[11px] font-semibold text-amber-800 block uppercase">Cross-Bureau Overlaps</span>
-            <span className={`text-xl font-bold ${hasOverlap ? 'text-amber-900 font-extrabold' : 'text-slate-400'}`}>
+          <div className={`p-3.5 rounded-md border ${hasOverlap ? 'bg-rose-50/70 border-rose-300' : 'bg-slate-50 border-gov-border'}`}>
+            <span className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">Overlap Advisories</span>
+            <span className={`text-2xl font-bold font-mono mt-1 block ${hasOverlap ? 'text-red-900 font-extrabold' : 'text-slate-400'}`}>
               {institution.potential_overlaps}
             </span>
+            <span className="text-[10px] text-slate-500">Cross-bureau coordination</span>
           </div>
         </div>
       </div>
 
       {/* MANDATORY PS-264 OVERLAP ALERT IF PRESENT */}
       {hasOverlap && (
-        <div className="bg-red-50 border-2 border-red-500 rounded-md p-4 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
+        <div className="bg-red-50/90 border border-red-300 rounded-md p-4.5 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="p-1.5 rounded bg-red-600 text-white shrink-0 mt-0.5">
-                <GitCompare className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-md bg-red-700 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                <GitCompare className="w-5 h-5 text-amber-300" />
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-red-900 tracking-wide uppercase">
-                  POTENTIAL OVERLAPPING CASES – COORDINATION REQUIRED
+                <span className="font-bold text-xs uppercase tracking-wider text-red-900 font-mono">
+                  STATUTORY ADVISORY &bull; PS-264
+                </span>
+                <h3 className="text-sm font-bold text-red-950 mt-0.5">
+                  Potential Overlapping Proceedings Detected Across Bureaus
                 </h3>
                 <p className="text-xs text-red-800 mt-1 leading-relaxed">
-                  Two or more active cases for verified institution <strong>{institution.institution_name}</strong> ({institution.permanent_id}) are currently being handled by differing Bureaus ({institution.involved_bureaus.join(', ')}). Coordinate with the respective handling officers before taking final administrative action.
+                  Multiple active cases for verified institution <strong>{institution.institution_name}</strong> ({institution.permanent_id}) are being processed simultaneously by differing Bureaus ({institution.involved_bureaus.join(', ')}). Coordinate with respective handling officers before issuing final statutory orders.
                 </p>
               </div>
             </div>
             <Link
               to="/coordination"
-              className="px-3.5 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded shadow transition-colors shrink-0"
+              className="gov-btn gov-btn-danger shrink-0 whitespace-nowrap self-start md:self-center"
             >
-              Open Coordination Workspace
+              <span>Open Coordination Workspace</span>
+              <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       )}
 
       {/* Tabs Navigation */}
-      <div className="border-b border-gov-border">
-        <nav className="flex space-x-6 text-xs font-semibold">
+      <div className="border-b border-gov-border bg-white rounded-t-md px-3">
+        <nav className="flex space-x-4 text-xs font-semibold overflow-x-auto">
           {[
             { id: 'overview', label: 'Consolidated Overview', icon: Layers },
             { id: 'complaints', label: `Complaint History (${institution.complaints.length})`, icon: FileText },
@@ -167,14 +184,14 @@ export const InstitutionDetailPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 cursor-pointer transition-colors ${
+                className={`py-3 px-2 border-b-2 font-medium flex items-center gap-2 cursor-pointer transition-all whitespace-nowrap ${
                   isActive
                     ? 'border-gov-primary text-gov-primary font-bold'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    : 'border-transparent text-slate-500 hover:text-gov-primary hover:border-slate-300'
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {tab.label}
+                <span>{tab.label}</span>
               </button>
             );
           })}

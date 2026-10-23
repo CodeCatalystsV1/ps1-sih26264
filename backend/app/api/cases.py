@@ -185,6 +185,9 @@ def get_case_detail(
     if not case:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
 
+    if case.institution:
+        enforce_user_region_or_admin(current_user, case.institution.region_id)
+
     base_out = enrich_case_out(case)
     detail = CaseDetailOut(**base_out.model_dump())
 
@@ -254,11 +257,19 @@ def change_case_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles([RoleCode.ADMIN, RoleCode.PGRC_OFFICER, RoleCode.RB_OFFICER, RoleCode.BUREAU_HEAD]))
 ):
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+
+    enforce_user_bureau_or_admin(current_user, case.current_bureau_id)
+    if case.institution:
+        enforce_user_region_or_admin(current_user, case.institution.region_id)
+
     is_admin = RoleCode.ADMIN in [r.code for r in current_user.roles]
     try:
         updated_case = update_case_status(
             db=db,
-            case_id=case_id,
+            case_id=case.id,
             new_status=status_update.new_status,
             remarks=status_update.remarks,
             actor_id=current_user.id,
@@ -276,10 +287,18 @@ def add_case_action(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles([RoleCode.ADMIN, RoleCode.PGRC_OFFICER, RoleCode.RB_OFFICER, RoleCode.BUREAU_HEAD]))
 ):
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+
+    enforce_user_bureau_or_admin(current_user, case.current_bureau_id)
+    if case.institution:
+        enforce_user_region_or_admin(current_user, case.institution.region_id)
+
     try:
         updated_case = record_case_action(
             db=db,
-            case_id=case_id,
+            case_id=case.id,
             action_type=action_in.action_type,
             action_details=action_in.action_details,
             actor_id=current_user.id,

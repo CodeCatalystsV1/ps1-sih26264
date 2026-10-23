@@ -100,42 +100,52 @@ export const ComplaintsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white p-4 rounded-md border border-gov-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Page Header Banner */}
+      <div className="gov-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gov-dark">Grievances & Complaints Management</h1>
-          <p className="text-xs text-gov-muted mt-0.5">
-            Register and monitor stakeholder grievances concerning AICTE-approved technical institutions
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-gov-info"></span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+              GRIEVANCE REGISTRY
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gov-dark mt-1">
+            Grievances & Complaints Redressal
+          </h1>
+          <p className="text-xs text-gov-muted mt-1">
+            Formal intake, docketing, and monitoring of institutional grievances submitted to AICTE
           </p>
         </div>
+
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gov-primary hover:bg-gov-dark text-white text-xs font-semibold rounded shadow-sm transition-colors cursor-pointer"
+          className="gov-btn gov-btn-primary self-start sm:self-center"
         >
-          <Plus className="w-4 h-4" /> Register New Grievance
+          <Plus className="w-4 h-4" />
+          <span>Register New Grievance</span>
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3.5 rounded-md border border-gov-border shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="relative w-full md:w-80">
+      <div className="gov-card p-4 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs">
+        <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search by Complaint Reference, Title, or Details..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-gov-primary focus:border-gov-primary"
+            className="gov-input pl-9"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select"
           >
-            <option value="">All Categories</option>
+            <option value="">All Grievance Categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -146,85 +156,106 @@ export const ComplaintsPage: React.FC = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select"
           >
-            <option value="">All Statuses</option>
-            <option value="REGISTERED">Registered</option>
-            <option value="CASE_LINKED">Official Case Linked</option>
-            <option value="DISPOSED">Disposed</option>
-            <option value="REJECTED">Rejected</option>
+            <option value="">All Docket Statuses</option>
+            <option value="REGISTERED">REGISTERED</option>
+            <option value="CASE_LINKED">CASE_LINKED (Official Case Opened)</option>
+            <option value="DISPOSED">DISPOSED (Resolved)</option>
+            <option value="REJECTED">REJECTED</option>
           </select>
+
+          <span className="text-[11px] font-mono text-slate-400 border-l border-slate-200 pl-3 hidden sm:inline">
+            {complaints.length} Records
+          </span>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm overflow-hidden">
+      {/* Complaints Table */}
+      <div className="gov-table-container">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="gov-table-header">
               <tr>
-                <th className="py-3 px-3">Complaint Ref</th>
-                <th className="py-3 px-3">Grievance Title</th>
-                <th className="py-3 px-3">Institution & Perm ID</th>
-                <th className="py-3 px-3">Category</th>
-                <th className="py-3 px-3">Complainant</th>
-                <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-3">Linked Case</th>
-                <th className="py-3 px-3 text-right">Action</th>
+                <th className="py-3 px-3.5 min-w-[140px]">Complaint Ref</th>
+                <th className="py-3 px-3.5 min-w-[260px]">Grievance Subject</th>
+                <th className="py-3 px-3.5 min-w-[220px]">Institution & Perm ID</th>
+                <th className="py-3 px-3.5 min-w-[160px]">Category</th>
+                <th className="py-3 px-3.5 min-w-[110px]">Complainant</th>
+                <th className="py-3 px-3.5 min-w-[120px]">Status</th>
+                <th className="py-3 px-3.5 min-w-[130px]">Linked Case</th>
+                <th className="py-3 px-3.5 text-right min-w-[90px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
-                    Loading complaints database...
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    Loading grievance records...
                   </td>
                 </tr>
               ) : complaints.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No matching grievances found
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    No matching grievances found in registry
                   </td>
                 </tr>
               ) : (
                 complaints.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-3 font-mono font-bold text-gov-primary whitespace-nowrap">
+                  <tr key={c.id} className="gov-table-row">
+                    <td className="py-3 px-3.5 font-mono font-bold text-gov-primary whitespace-nowrap">
                       {c.complaint_reference}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-800 max-w-[200px] truncate" title={c.title}>
-                      {c.title}
+                    <td className="py-3 px-3.5">
+                      <div className="font-semibold text-slate-900 leading-snug line-clamp-1" title={c.title}>
+                        {c.title}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
+                        Received: {new Date(c.received_at).toLocaleDateString()} &bull; Via {c.source}
+                      </span>
                     </td>
-                    <td className="py-3 px-3 max-w-[180px]">
-                      <div className="font-semibold text-slate-900 truncate" title={c.institution_name}>
+                    <td className="py-3 px-3.5">
+                      <div className="font-medium text-slate-900 truncate max-w-[210px]" title={c.institution_name}>
                         {c.institution_name}
                       </div>
                       <span className="font-mono text-[10px] text-gov-secondary font-bold">
                         {c.permanent_id}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-slate-600">{c.category_name}</td>
-                    <td className="py-3 px-3">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 font-medium text-slate-700">
+                    <td className="py-3 px-3.5 text-slate-700">
+                      <span className="truncate max-w-[150px] block" title={c.category_name}>
+                        {c.category_name}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3.5">
+                      <span className="gov-badge gov-badge-neutral font-medium">
                         {c.complainant_type}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                    <td className="py-3 px-3.5">
+                      <span className={`gov-badge ${
+                        c.status === 'CASE_LINKED'
+                          ? 'gov-badge-info'
+                          : c.status === 'DISPOSED'
+                          ? 'gov-badge-success'
+                          : 'gov-badge-neutral'
+                      }`}>
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-mono text-slate-700">
+                    <td className="py-3 px-3.5 font-mono text-xs">
                       {c.linked_case_reference ? (
-                        <span className="font-bold text-gov-primary">{c.linked_case_reference}</span>
+                        <span className="font-bold text-gov-primary bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          {c.linked_case_reference}
+                        </span>
                       ) : (
                         <span className="text-slate-400 italic">None</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                    <td className="py-3 px-3.5 text-right whitespace-nowrap">
                       <Link
                         to={`/complaints/${c.id}`}
-                        className="text-xs text-gov-primary hover:underline font-semibold"
+                        className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline"
                       >
                         Details &rarr;
                       </Link>
@@ -239,13 +270,21 @@ export const ComplaintsPage: React.FC = () => {
 
       {/* Modal: Register Grievance */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-6 border border-slate-300 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wide">
-                Register Grievance & Open Official Case
-              </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-gov-modal max-w-xl w-full p-6 border border-gov-border max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-gov-border">
+              <div>
+                <h3 className="font-bold text-sm text-gov-dark uppercase tracking-wider">
+                  Register Grievance & Open Official Case
+                </h3>
+                <p className="text-[11px] text-gov-muted mt-0.5">
+                  Formal Stakeholder Complaint Submission Docket
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -265,7 +304,7 @@ export const ComplaintsPage: React.FC = () => {
                   required
                   value={formData.institution_id}
                   onChange={(e) => setFormData({ ...formData, institution_id: parseInt(e.target.value) })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-2 font-medium"
+                  className="gov-select w-full"
                 >
                   {institutions.map((inst) => (
                     <option key={inst.id} value={inst.id}>
@@ -284,7 +323,7 @@ export const ComplaintsPage: React.FC = () => {
                   placeholder="Concise summary of the grievance..."
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                  className="gov-input"
                 />
               </div>
 
@@ -299,7 +338,7 @@ export const ComplaintsPage: React.FC = () => {
                   placeholder="Provide complete facts, dates, affected parties, and specific institutional violations..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-slate-300 rounded p-2.5"
+                  className="gov-input font-sans leading-relaxed"
                 />
               </div>
 
@@ -309,7 +348,7 @@ export const ComplaintsPage: React.FC = () => {
                   <select
                     value={formData.category_id}
                     onChange={(e) => setFormData({ ...formData, category_id: parseInt(e.target.value) })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select w-full"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -323,7 +362,7 @@ export const ComplaintsPage: React.FC = () => {
                   <select
                     value={formData.complainant_type}
                     onChange={(e) => setFormData({ ...formData, complainant_type: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select w-full"
                   >
                     <option value="STUDENT">Student</option>
                     <option value="FACULTY">Faculty Member</option>
@@ -341,7 +380,7 @@ export const ComplaintsPage: React.FC = () => {
                   <select
                     value={formData.assigned_bureau_id}
                     onChange={(e) => setFormData({ ...formData, assigned_bureau_id: parseInt(e.target.value) })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 font-medium"
+                    className="gov-select w-full font-medium"
                   >
                     {bureaus.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -355,7 +394,7 @@ export const ComplaintsPage: React.FC = () => {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select w-full"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -365,33 +404,33 @@ export const ComplaintsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded flex items-center gap-2">
+              <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-md flex items-center gap-2.5">
                 <input
                   type="checkbox"
                   id="create_case"
                   checked={formData.create_case_automatically}
                   onChange={(e) => setFormData({ ...formData, create_case_automatically: e.target.checked })}
-                  className="rounded text-gov-primary focus:ring-gov-primary"
+                  className="rounded text-gov-primary focus:ring-gov-primary cursor-pointer"
                 />
-                <label htmlFor="create_case" className="font-semibold text-blue-900 cursor-pointer">
+                <label htmlFor="create_case" className="font-semibold text-gov-dark cursor-pointer text-xs">
                   Automatically open and track official Case workflow (CASE-YYYY-XXXX)
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-gov-border">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded text-slate-700 font-semibold"
+                  className="gov-btn gov-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-gov-primary hover:bg-gov-dark text-white rounded font-semibold"
+                  className="gov-btn gov-btn-primary"
                 >
-                  {submitting ? 'Submitting...' : 'Register Grievance'}
+                  {submitting ? 'Docketing...' : 'Register Grievance'}
                 </button>
               </div>
             </form>

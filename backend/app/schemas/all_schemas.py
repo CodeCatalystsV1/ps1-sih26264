@@ -103,6 +103,7 @@ class InstitutionCreate(InstitutionBase):
     pass
 
 class InstitutionUpdate(BaseModel):
+    permanent_id: Optional[str] = None
     institution_name: Optional[str] = None
     institution_type: Optional[str] = None
     address: Optional[str] = None

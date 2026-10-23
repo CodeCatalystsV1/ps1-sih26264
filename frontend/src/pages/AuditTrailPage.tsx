@@ -33,110 +33,129 @@ export const AuditTrailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded-md border border-gov-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-gov-dark">System Security & Audit Trail</h1>
-          <p className="text-xs text-gov-muted mt-0.5">
-            Immutable log of all user authentications, status changes, bureau transfers, and coordination decisions
-          </p>
+      <div className="gov-card p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              System Security & Statutory Audit Trail
+            </h1>
+            <p className="text-xs text-slate-600">
+              Immutable statutory record of all authentications, case transitions, bureau reallocations, and coordination rulings.
+            </p>
+          </div>
+          <span className="gov-badge-neutral font-mono text-xs self-start sm:self-auto">
+            Tamper-Evident Ledger
+          </span>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-3 rounded-md border border-gov-border shadow-sm flex flex-wrap items-center gap-3 text-xs">
-        <select
-          value={actionFilter}
-          onChange={(e) => setActionFilter(e.target.value)}
-          className="border border-slate-300 rounded px-2.5 py-1.5 bg-white"
-        >
-          <option value="">All Action Types</option>
-          <option value="LOGIN_SUCCESS">LOGIN_SUCCESS</option>
-          <option value="LOGIN_FAILED">LOGIN_FAILED</option>
-          <option value="COMPLAINT_REGISTERED">COMPLAINT_REGISTERED</option>
-          <option value="CASE_STATUS_UPDATED">CASE_STATUS_UPDATED</option>
-          <option value="CASE_ASSIGNED">CASE_ASSIGNED</option>
-          <option value="CASE_TRANSFERRED">CASE_TRANSFERRED</option>
-          <option value="OVERLAP_FLAG_CREATED">OVERLAP_FLAG_CREATED</option>
-          <option value="OVERLAP_REVIEW">OVERLAP_REVIEW</option>
-          <option value="EXPORT_REPORT">EXPORT_REPORT</option>
-        </select>
+      <div className="gov-card p-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="gov-select"
+            >
+              <option value="">All Action Categories</option>
+              <option value="LOGIN_SUCCESS">LOGIN_SUCCESS</option>
+              <option value="LOGIN_FAILED">LOGIN_FAILED</option>
+              <option value="COMPLAINT_REGISTERED">COMPLAINT_REGISTERED</option>
+              <option value="CASE_STATUS_UPDATED">CASE_STATUS_UPDATED</option>
+              <option value="CASE_ASSIGNED">CASE_ASSIGNED</option>
+              <option value="CASE_TRANSFERRED">CASE_TRANSFERRED</option>
+              <option value="OVERLAP_FLAG_CREATED">OVERLAP_FLAG_CREATED</option>
+              <option value="OVERLAP_REVIEW">OVERLAP_REVIEW</option>
+              <option value="EXPORT_REPORT">EXPORT_REPORT</option>
+            </select>
+          </div>
 
-        <select
-          value={recordFilter}
-          onChange={(e) => setRecordFilter(e.target.value)}
-          className="border border-slate-300 rounded px-2.5 py-1.5 bg-white"
-        >
-          <option value="">All Record Types</option>
-          <option value="User">User</option>
-          <option value="Institution">Institution</option>
-          <option value="Complaint">Complaint</option>
-          <option value="Case">Case</option>
-          <option value="OverlapFlag">OverlapFlag</option>
-          <option value="Report">Report</option>
-        </select>
+          <div className="w-full sm:w-auto flex-1 min-w-[180px]">
+            <select
+              value={recordFilter}
+              onChange={(e) => setRecordFilter(e.target.value)}
+              className="gov-select"
+            >
+              <option value="">All Record Entities</option>
+              <option value="User">User</option>
+              <option value="Institution">Institution</option>
+              <option value="Complaint">Complaint</option>
+              <option value="Case">Case</option>
+              <option value="OverlapFlag">OverlapFlag</option>
+              <option value="Report">Report</option>
+            </select>
+          </div>
 
-        <select
-          value={outcomeFilter}
-          onChange={(e) => setOutcomeFilter(e.target.value)}
-          className="border border-slate-300 rounded px-2.5 py-1.5 bg-white"
-        >
-          <option value="">All Outcomes</option>
-          <option value="SUCCESS">SUCCESS</option>
-          <option value="FAILURE">FAILURE</option>
-          <option value="DENIED">DENIED</option>
-        </select>
+          <div className="w-full sm:w-auto min-w-[160px]">
+            <select
+              value={outcomeFilter}
+              onChange={(e) => setOutcomeFilter(e.target.value)}
+              className="gov-select"
+            >
+              <option value="">All Outcomes</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="FAILURE">FAILURE</option>
+              <option value="DENIED">DENIED</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Audit Log Table */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm overflow-hidden text-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="gov-table-header">
-              <tr>
-                <th className="py-2.5 px-3">Timestamp (UTC)</th>
-                <th className="py-2.5 px-3">Actor / User</th>
-                <th className="py-2.5 px-3">Action Type</th>
-                <th className="py-2.5 px-3">Target Entity</th>
-                <th className="py-2.5 px-3">Record ID</th>
-                <th className="py-2.5 px-3">Outcome</th>
-                <th className="py-2.5 px-3">Metadata Context</th>
+      <div className="gov-card overflow-hidden">
+        <div className="gov-card-header p-4 bg-slate-50/80 border-b border-gov-border flex items-center justify-between">
+          <span className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <History className="w-4 h-4 text-gov-primary" />
+            Audit Ledger ({logs.length} Events)
+          </span>
+          <span className="text-[11px] text-slate-500 font-mono">UTC Event Synchronization</span>
+        </div>
+        <div className="gov-table-container">
+          <table className="gov-table">
+            <thead>
+              <tr className="gov-table-header">
+                <th className="min-w-[170px]">Timestamp (UTC)</th>
+                <th className="min-w-[150px]">Actor / Official</th>
+                <th className="min-w-[190px]">Action Category</th>
+                <th className="min-w-[130px]">Target Entity</th>
+                <th className="min-w-[110px]">Record ID</th>
+                <th className="min-w-[110px]">Audit Outcome</th>
+                <th className="min-w-[300px]">Contextual Metadata</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+            <tbody className="font-mono text-[11px]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 font-sans">
-                    Loading audit trail...
+                  <td colSpan={7} className="py-8 text-center text-slate-500 font-sans">
+                    <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-gov-primary mb-2"></div>
+                    <p>Retrieving immutable audit logs...</p>
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 font-sans">
-                    No matching audit log records found
+                  <td colSpan={7} className="py-8 text-center text-slate-500 font-sans">
+                    No matching audit log records found for selected filter criteria.
                   </td>
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">
+                  <tr key={log.id} className="gov-table-row">
+                    <td className="text-slate-600 whitespace-nowrap">
                       {new Date(log.created_at).toISOString().replace('T', ' ').slice(0, 19)}
                     </td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-800 font-sans">
-                      {log.user_name || 'System'}
+                    <td className="font-semibold text-slate-900 font-sans text-xs">
+                      {log.user_name || 'System / Daemon'}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-gov-primary">{log.action_type}</td>
-                    <td className="py-2.5 px-3 text-slate-600 font-sans">{log.record_type}</td>
-                    <td className="py-2.5 px-3 text-slate-700">{log.record_id || '-'}</td>
-                    <td className="py-2.5 px-3 font-sans">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        log.outcome === 'SUCCESS'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                    <td className="font-bold text-gov-primary">{log.action_type}</td>
+                    <td className="text-slate-700 font-sans text-xs">{log.record_type}</td>
+                    <td className="text-slate-600">{log.record_id || '-'}</td>
+                    <td className="font-sans">
+                      <span className={log.outcome === 'SUCCESS' ? 'gov-badge-success' : 'gov-badge-danger'}>
                         {log.outcome}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-slate-500 max-w-[280px] truncate" title={log.metadata_json || ''}>
+                    <td className="text-slate-600 font-mono text-[11px] max-w-[350px] truncate" title={log.metadata_json || ''}>
                       {log.metadata_json || '-'}
                     </td>
                   </tr>

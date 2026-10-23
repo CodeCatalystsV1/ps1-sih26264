@@ -71,38 +71,46 @@ export const ComplaintDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Back button and Header */}
-      <div>
-        <Link to="/complaints" className="text-xs text-slate-500 hover:text-gov-primary flex items-center gap-1 mb-2 font-medium">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Complaints List
-        </Link>
-        <div className="bg-white p-5 rounded-md border border-gov-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+        <Link to="/" className="hover:text-gov-primary">Dashboard</Link>
+        <span>&rsaquo;</span>
+        <Link to="/complaints" className="hover:text-gov-primary">Grievances & Complaints</Link>
+        <span>&rsaquo;</span>
+        <span className="text-slate-800 font-semibold">{complaint.complaint_reference}</span>
+      </div>
+
+      {/* Grievance Header Banner */}
+      <div className="gov-card p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-sm font-bold text-gov-primary px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200">
+              <span className="font-mono text-xs font-bold text-gov-primary px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200">
                 {complaint.complaint_reference}
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+              <span className="gov-badge gov-badge-info">
                 Status: {complaint.status}
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
+              <span className="gov-badge gov-badge-neutral">
                 Sensitivity: {complaint.sensitivity_classification}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mt-2">{complaint.title}</h1>
-            <p className="text-xs text-slate-500 mt-1 flex items-center gap-3">
-              <span>Received: {new Date(complaint.received_at).toLocaleDateString()}</span>
+            <h1 className="text-xl sm:text-2xl font-bold text-gov-dark mt-2.5">{complaint.title}</h1>
+            <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-3 flex-wrap">
+              <span>Receipt Date: <strong>{new Date(complaint.received_at).toLocaleDateString()}</strong></span>
               <span>&bull;</span>
-              <span>Channel: {complaint.source}</span>
+              <span>Submission Channel: <strong>{complaint.source}</strong></span>
               <span>&bull;</span>
-              <span>Complainant: {complaint.complainant_type}</span>
+              <span>Complainant Category: <strong>{complaint.complainant_type}</strong></span>
             </p>
           </div>
 
           {complaint.linked_case_reference && (
-            <div className="p-3 bg-slate-50 rounded border border-slate-200 text-right shrink-0">
-              <span className="text-[11px] text-slate-500 block">Linked Official Case</span>
-              <span className="font-mono font-bold text-gov-primary text-sm">
+            <div className="p-3.5 bg-slate-50 rounded-md border border-gov-border text-left md:text-right shrink-0">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Linked Official Case
+              </span>
+              <span className="font-mono font-bold text-gov-primary text-base block mt-0.5">
                 {complaint.linked_case_reference}
               </span>
             </div>
@@ -111,25 +119,25 @@ export const ComplaintDetailPage: React.FC = () => {
       </div>
 
       {/* Grid: Complaint Details & Institution Link */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Description & Documents */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-5 rounded-md border border-gov-border shadow-sm space-y-3 text-xs">
-            <h3 className="font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="gov-card p-5 space-y-3 text-xs">
+            <h3 className="font-bold text-gov-dark uppercase tracking-wider border-b border-gov-border pb-2 text-xs">
               Full Grievance Narrative
             </h3>
-            <p className="text-slate-700 leading-relaxed whitespace-pre-line text-xs">
+            <p className="text-gov-text leading-relaxed whitespace-pre-line text-xs font-sans">
               {complaint.description}
             </p>
           </div>
 
           {/* Supporting Documents Section */}
-          <div className="bg-white p-5 rounded-md border border-gov-border shadow-sm space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="font-bold text-slate-800 uppercase tracking-wider">
+          <div className="gov-card p-5 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-gov-border pb-3">
+              <h3 className="font-bold text-gov-dark uppercase tracking-wider text-xs">
                 Attached Evidentiary Documents ({complaint.documents.length})
               </h3>
-              <label className="inline-flex items-center gap-1.5 px-3 py-1 bg-gov-secondary hover:bg-gov-dark text-white rounded cursor-pointer font-semibold text-xs transition-colors">
+              <label className="gov-btn gov-btn-secondary text-xs">
                 <Upload className="w-3.5 h-3.5" />
                 <span>{uploading ? 'Uploading...' : 'Upload Document'}</span>
                 <input
@@ -143,30 +151,32 @@ export const ComplaintDetailPage: React.FC = () => {
             </div>
 
             {uploadSuccess && (
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{uploadSuccess}</span>
               </div>
             )}
 
             <div className="divide-y divide-slate-100">
               {complaint.documents.length === 0 ? (
-                <div className="text-slate-400 py-4 text-center">
+                <div className="text-slate-400 py-6 text-center text-xs">
                   No supporting documents uploaded yet.
                 </div>
               ) : (
                 complaint.documents.map((doc) => (
-                  <div key={doc.id} className="py-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileCheck className="w-4 h-4 text-gov-primary" />
+                  <div key={doc.id} className="py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded bg-slate-100 text-gov-primary">
+                        <FileCheck className="w-4 h-4" />
+                      </div>
                       <div>
-                        <span className="font-semibold text-slate-800 block">{doc.original_filename}</span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="font-semibold text-slate-800 block text-xs">{doc.original_filename}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">
                           {(doc.file_size / 1024).toFixed(1)} KB &bull; Uploaded {new Date(doc.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                       {doc.content_type.split('/').pop()}
                     </span>
                   </div>
@@ -178,24 +188,27 @@ export const ComplaintDetailPage: React.FC = () => {
 
         {/* Right Col: Associated Institution Profile Link */}
         <div className="space-y-6">
-          <div className="bg-white p-5 rounded-md border border-gov-border shadow-sm text-xs space-y-3">
-            <h3 className="font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">
+          <div className="gov-card p-5 text-xs space-y-4">
+            <h3 className="font-bold text-gov-dark uppercase tracking-wider border-b border-gov-border pb-2 text-xs">
               Concerned Institution
             </h3>
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded">
-              <span className="font-bold text-slate-900 block text-sm">{complaint.institution_name}</span>
-              <span className="font-mono text-gov-primary font-bold block mt-1">
+            <div className="p-3.5 bg-slate-50 border border-gov-border rounded-md space-y-2">
+              <span className="font-bold text-gov-dark block text-sm leading-snug">
+                {complaint.institution_name}
+              </span>
+              <span className="font-mono text-gov-secondary font-bold text-xs block">
                 Permanent ID: {complaint.permanent_id}
               </span>
-              <span className="text-[11px] text-slate-500 block mt-2">
-                Handling Bureau: <strong>{complaint.assigned_bureau_name || 'Central Grievance Cell'}</strong>
-              </span>
+              <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-200">
+                Handling Bureau: <strong className="text-slate-700">{complaint.assigned_bureau_name || 'Central Grievance Cell'}</strong>
+              </div>
             </div>
+
             <Link
               to={`/institutions/${complaint.institution_id}`}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-gov-primary hover:bg-gov-dark text-white rounded font-semibold text-xs transition-colors"
+              className="gov-btn gov-btn-primary w-full"
             >
-              Open Consolidated Institution Profile &rarr;
+              <span>View Institution Dossier &rarr;</span>
             </Link>
           </div>
         </div>

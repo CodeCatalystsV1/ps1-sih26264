@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db
 from backend.app.api.deps import require_roles
-from backend.app.core.permissions import RoleCode
-from backend.app.models.entities import User, Assignment, Transfer
+from backend.app.core.permissions import RoleCode, enforce_user_bureau_or_admin, enforce_user_region_or_admin
+from backend.app.models.entities import User, Assignment, Transfer, Case
 from backend.app.schemas.all_schemas import (
     AssignmentCreate, AssignmentOut, TransferCreate, TransferOut
 )
@@ -18,10 +18,18 @@ def assign_case(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles([RoleCode.ADMIN, RoleCode.BUREAU_HEAD, RoleCode.PGRC_OFFICER, RoleCode.RB_OFFICER]))
 ):
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+
+    enforce_user_bureau_or_admin(current_user, case.current_bureau_id)
+    if case.institution:
+        enforce_user_region_or_admin(current_user, case.institution.region_id)
+
     try:
         assign = assign_case_to_officer(
             db=db,
-            case_id=case_id,
+            case_id=case.id,
             officer_id=assign_in.officer_id,
             reason=assign_in.reason,
             actor_id=current_user.id,
@@ -46,10 +54,18 @@ def transfer_case_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles([RoleCode.ADMIN, RoleCode.BUREAU_HEAD, RoleCode.PGRC_OFFICER, RoleCode.RB_OFFICER]))
 ):
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+
+    enforce_user_bureau_or_admin(current_user, case.current_bureau_id)
+    if case.institution:
+        enforce_user_region_or_admin(current_user, case.institution.region_id)
+
     try:
         trans = transfer_case(
             db=db,
-            case_id=case_id,
+            case_id=case.id,
             to_bureau_id=transfer_in.to_bureau_id,
             transfer_reason=transfer_in.transfer_reason,
             actor_id=current_user.id,
@@ -69,3 +85,4 @@ def transfer_case_endpoint(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+

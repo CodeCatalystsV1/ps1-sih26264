@@ -113,6 +113,7 @@ def get_institution_profile(
     return out
 
 @router.patch("/{institution_id}", response_model=InstitutionOut)
+@router.put("/{institution_id}", response_model=InstitutionOut)
 def modify_institution(
     institution_id: int,
     inst_in: InstitutionUpdate,

@@ -128,13 +128,20 @@ def upload_complaint_document(
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
 
+    user_roles = [r.code for r in current_user.roles]
+    if RoleCode.COMPLAINANT in user_roles and RoleCode.ADMIN not in user_roles and len(user_roles) == 1:
+        if complaint.complainant_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
     # Validate file type
     allowed_types = ["application/pdf", "image/jpeg", "image/png", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file format '{file.content_type}'. Allowed: PDF, JPG, PNG, DOCX.")
 
+    # Sanitize filename
+    clean_name = os.path.basename(file.filename or "upload.pdf")
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    safe_key = f"doc_{uuid.uuid4().hex[:12]}_{file.filename}"
+    safe_key = f"doc_{uuid.uuid4().hex[:12]}_{clean_name}"
     file_path = os.path.join(settings.UPLOAD_DIR, safe_key)
 
     try:
@@ -144,8 +151,19 @@ def upload_complaint_document(
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to store file: {str(e)}")
 
+    max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+    if file_size > max_bytes:
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File exceeds maximum permitted size of {settings.MAX_UPLOAD_SIZE_MB} MB."
+        )
+
     doc = Document(
-        original_filename=file.filename,
+        original_filename=clean_name,
         safe_storage_key=safe_key,
         file_path=file_path,
         content_type=file.content_type,
@@ -163,7 +181,7 @@ def upload_complaint_document(
         record_type="Complaint",
         record_id=str(complaint.id),
         user_id=current_user.id,
-        metadata={"filename": file.filename, "size": file_size}
+        metadata={"filename": clean_name, "size": file_size}
     )
 
     return DocumentOut.model_validate(doc)

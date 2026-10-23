@@ -126,6 +126,16 @@ def update_institution(db: Session, inst_id: int, inst_in: InstitutionUpdate, up
         raise ValueError(f"Institution {inst_id} not found.")
 
     update_data = inst_in.model_dump(exclude_unset=True)
+    if "permanent_id" in update_data and update_data["permanent_id"]:
+        new_pid = update_data["permanent_id"].strip()
+        existing = db.query(Institution).filter(
+            Institution.permanent_id == new_pid,
+            Institution.id != inst_id
+        ).first()
+        if existing:
+            raise ValueError(f"An institution with AICTE Permanent ID '{new_pid}' already exists.")
+        update_data["permanent_id"] = new_pid
+
     for field, value in update_data.items():
         setattr(inst, field, value)
 

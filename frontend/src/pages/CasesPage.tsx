@@ -46,34 +46,42 @@ export const CasesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white p-4 rounded-md border border-gov-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Page Header Banner */}
+      <div className="gov-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gov-dark">Official Cases Management</h1>
-          <p className="text-xs text-gov-muted mt-0.5">
-            Active and resolved official grievance workflow records across AICTE Bureaus
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-gov-secondary"></span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+              CASE WORKFLOW ENGINE
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gov-dark mt-1">
+            Official Grievance Cases
+          </h1>
+          <p className="text-xs text-gov-muted mt-1">
+            Active and resolved official grievance workflow records across AICTE regulatory and grievance bureaus
           </p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3.5 rounded-md border border-gov-border shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="relative w-full md:w-80">
+      <div className="gov-card p-4 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs">
+        <div className="relative w-full lg:w-96">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search by Case Ref, Title, Institution, or Permanent ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-gov-primary focus:border-gov-primary"
+            className="gov-input pl-9"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-between lg:justify-end">
           <select
             value={selectedBureau}
             onChange={(e) => setSelectedBureau(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select"
           >
             <option value="">All Bureaus</option>
             {bureaus.map((b) => (
@@ -86,7 +94,7 @@ export const CasesPage: React.FC = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select"
           >
             <option value="">All Statuses</option>
             <option value="Received">Received</option>
@@ -102,7 +110,7 @@ export const CasesPage: React.FC = () => {
           <select
             value={selectedPriority}
             onChange={(e) => setSelectedPriority(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select"
           >
             <option value="">All Priorities</option>
             <option value="LOW">Low</option>
@@ -115,10 +123,10 @@ export const CasesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterOverdue(!filterOverdue)}
-            className={`px-2.5 py-1.5 rounded border text-xs font-semibold cursor-pointer transition-colors ${
+            className={`px-3 py-2 rounded-md border text-xs font-semibold cursor-pointer transition-all shadow-xs ${
               filterOverdue
-                ? 'bg-red-600 text-white border-red-700'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                ? 'bg-red-700 text-white border-red-800'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border-gov-border'
             }`}
           >
             Overdue Only
@@ -127,101 +135,109 @@ export const CasesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilterOverlap(!filterOverlap)}
-            className={`px-2.5 py-1.5 rounded border text-xs font-semibold cursor-pointer transition-colors ${
+            className={`px-3 py-2 rounded-md border text-xs font-semibold cursor-pointer transition-all shadow-xs ${
               filterOverlap
-                ? 'bg-rose-600 text-white border-rose-700'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                ? 'bg-rose-700 text-white border-rose-800'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border-gov-border'
             }`}
           >
             Overlaps Only
           </button>
+
+          <span className="text-[11px] font-mono text-slate-400 border-l border-slate-200 pl-3 hidden sm:inline">
+            {cases.length} Records
+          </span>
         </div>
       </div>
 
       {/* Cases Table */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm overflow-hidden">
+      <div className="gov-table-container">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="gov-table-header">
               <tr>
-                <th className="py-3 px-3">Case Ref</th>
-                <th className="py-3 px-3">Institution & Perm ID</th>
-                <th className="py-3 px-3">Current Bureau</th>
-                <th className="py-3 px-3">Handling Officer</th>
-                <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-3">Priority</th>
-                <th className="py-3 px-3">Deadline Status</th>
-                <th className="py-3 px-3 text-center">Coordination</th>
-                <th className="py-3 px-3 text-right">Action</th>
+                <th className="py-3 px-3.5 min-w-[140px]">Case Ref</th>
+                <th className="py-3 px-3.5 min-w-[240px]">Institution & Perm ID</th>
+                <th className="py-3 px-3.5 min-w-[110px]">Bureau</th>
+                <th className="py-3 px-3.5 min-w-[160px]">Handling Officer</th>
+                <th className="py-3 px-3.5 min-w-[130px]">Status</th>
+                <th className="py-3 px-3.5 min-w-[100px]">Priority</th>
+                <th className="py-3 px-3.5 min-w-[140px]">Deadline Status</th>
+                <th className="py-3 px-3.5 text-center min-w-[110px]">Coordination</th>
+                <th className="py-3 px-3.5 text-right min-w-[90px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     Loading cases database...
                   </td>
                 </tr>
               ) : cases.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     No matching cases found
                   </td>
                 </tr>
               ) : (
                 cases.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-3 font-mono font-bold text-gov-primary whitespace-nowrap">
+                  <tr key={c.id} className="gov-table-row">
+                    <td className="py-3 px-3.5 font-mono font-bold text-gov-primary whitespace-nowrap">
                       {c.case_reference}
                     </td>
-                    <td className="py-3 px-3 max-w-[190px]">
-                      <div className="font-semibold text-slate-900 truncate" title={c.institution_name}>
+                    <td className="py-3 px-3.5">
+                      <div className="font-semibold text-slate-900 truncate max-w-[230px]" title={c.institution_name}>
                         {c.institution_name}
                       </div>
                       <span className="font-mono text-[10px] text-gov-secondary font-bold">
                         {c.permanent_id}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                    <td className="py-3 px-3.5">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                         {c.current_bureau_code}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-slate-700 font-medium">
-                      {c.current_officer_name || 'Unassigned'}
+                    <td className="py-3 px-3.5 text-slate-800 font-medium">
+                      {c.current_officer_name || <span className="text-slate-400 italic">Unassigned</span>}
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                    <td className="py-3 px-3.5">
+                      <span className="gov-badge gov-badge-info">
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        c.priority === 'URGENT' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-700'
+                        c.priority === 'URGENT'
+                          ? 'bg-red-100 text-red-800 border border-red-300'
+                          : c.priority === 'HIGH'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-slate-100 text-slate-700 border border-slate-200'
                       }`}>
                         {c.priority}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3.5">
                       <span className={`text-[11px] font-medium ${
                         c.is_overdue ? 'text-red-700 font-bold' : 'text-slate-600'
                       }`}>
                         {c.deadline_status_label}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-3 px-3.5 text-center">
                       {c.has_potential_overlap ? (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-red-600 text-white flex items-center justify-center gap-1 mx-auto w-fit">
+                        <span className="gov-badge gov-badge-overlap mx-auto">
                           <GitCompare className="w-3 h-3" /> Overlap
                         </span>
                       ) : (
                         <span className="text-slate-300">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                    <td className="py-3 px-3.5 text-right whitespace-nowrap">
                       <Link
                         to={`/cases/${c.id}`}
-                        className="text-xs text-gov-primary hover:underline font-semibold"
+                        className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline"
                       >
                         Manage &rarr;
                       </Link>

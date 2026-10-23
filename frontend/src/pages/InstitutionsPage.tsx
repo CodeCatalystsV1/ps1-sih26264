@@ -89,97 +89,112 @@ export const InstitutionsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white p-4 rounded-md border border-gov-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Page Header Banner */}
+      <div className="gov-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gov-dark">Institutions Registry</h1>
-          <p className="text-xs text-gov-muted mt-0.5">
-            Centralized registry of technical institutions with consolidated grievance profiles
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-gov-secondary"></span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+              REGISTRY & DIRECTORY
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gov-dark mt-1">
+            Technical Institutions Registry
+          </h1>
+          <p className="text-xs text-gov-muted mt-1">
+            Consolidated directory of AICTE-approved institutions with active grievance dockets and cross-bureau flags
           </p>
         </div>
+
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gov-primary hover:bg-gov-dark text-white text-xs font-semibold rounded shadow-sm transition-colors cursor-pointer"
+          className="gov-btn gov-btn-primary self-start sm:self-center"
         >
-          <Plus className="w-4 h-4" /> Add Technical Institution
+          <Plus className="w-4 h-4" />
+          <span>Add Technical Institution</span>
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3.5 rounded-md border border-gov-border shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-        <div className="relative w-full md:w-80">
+      <div className="gov-card p-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search by Institution Name, Permanent ID, or City..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-gov-primary focus:border-gov-primary"
+            className="gov-input pl-9"
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-            <Filter className="w-3.5 h-3.5 text-slate-400" /> Region:
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center gap-2 text-slate-600 font-medium">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span>Regional Office:</span>
           </div>
           <select
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
-            className="border border-slate-300 rounded-md px-2.5 py-1.5 bg-white text-xs"
+            className="gov-select min-w-[180px]"
           >
-            <option value="">All Regions</option>
+            <option value="">All Regional Jurisdictions</option>
             {regions.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name} ({r.code})
               </option>
             ))}
           </select>
+
+          <span className="text-[11px] font-mono text-slate-400 border-l border-slate-200 pl-3 hidden sm:inline">
+            {institutions.length} Recorded
+          </span>
         </div>
       </div>
 
       {/* Institutions Table */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm overflow-hidden">
+      <div className="gov-table-container">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="gov-table-header">
               <tr>
-                <th className="py-3 px-4">Permanent ID</th>
-                <th className="py-3 px-4">Institution Name & Location</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-3 text-center">Complaints</th>
-                <th className="py-3 px-3 text-center">Active Cases</th>
-                <th className="py-3 px-3 text-center">Overdue</th>
-                <th className="py-3 px-3 text-center">Overlaps</th>
-                <th className="py-3 px-4 text-right">Consolidated View</th>
+                <th className="py-3 px-4 min-w-[140px]">Permanent ID</th>
+                <th className="py-3 px-4 min-w-[280px]">Institution Name & Location</th>
+                <th className="py-3 px-4 min-w-[160px]">Category Type</th>
+                <th className="py-3 px-3 text-center min-w-[90px]">Complaints</th>
+                <th className="py-3 px-3 text-center min-w-[100px]">Active Cases</th>
+                <th className="py-3 px-3 text-center min-w-[90px]">SLA Overdue</th>
+                <th className="py-3 px-3 text-center min-w-[110px]">Coordination</th>
+                <th className="py-3 px-4 text-right min-w-[120px]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
                     Loading technical institutions registry...
                   </td>
                 </tr>
               ) : institutions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No matching institutions found
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    No matching institutions found in registry
                   </td>
                 </tr>
               ) : (
                 institutions.map((inst) => (
-                  <tr key={inst.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={inst.id} className="gov-table-row">
                     <td className="py-3 px-4 font-mono font-bold text-gov-primary whitespace-nowrap">
                       {inst.permanent_id}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900">{inst.institution_name}</div>
-                      <div className="text-[11px] text-slate-500">
-                        {inst.city}, {inst.state} ({inst.postal_code})
+                      <div className="font-bold text-slate-900 leading-snug">{inst.institution_name}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {inst.city}, {inst.state} &bull; Pin: {inst.postal_code}
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 font-medium">
+                      <span className="gov-badge gov-badge-neutral font-medium">
                         {inst.institution_type}
                       </span>
                     </td>
@@ -187,15 +202,15 @@ export const InstitutionsPage: React.FC = () => {
                       {inst.total_complaints}
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        inst.active_cases > 0 ? 'bg-blue-100 text-blue-800' : 'text-slate-400'
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                        inst.active_cases > 0 ? 'bg-blue-100 text-gov-primary' : 'text-slate-400'
                       }`}>
                         {inst.active_cases}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
                       {inst.overdue_cases > 0 ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 animate-pulse">
+                        <span className="gov-badge gov-badge-danger">
                           {inst.overdue_cases} Due
                         </span>
                       ) : (
@@ -204,19 +219,19 @@ export const InstitutionsPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-3 text-center">
                       {inst.potential_overlaps > 0 ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-600 text-white flex items-center justify-center gap-1 mx-auto w-fit">
+                        <span className="gov-badge gov-badge-overlap">
                           <GitCompare className="w-3 h-3" /> Flagged
                         </span>
                       ) : (
                         <span className="text-slate-300">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
                       <Link
                         to={`/institutions/${inst.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 hover:bg-gov-primary hover:text-white text-slate-700 font-semibold rounded text-xs transition-colors"
+                        className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline"
                       >
-                        Profile &rarr;
+                        View Dossier &rarr;
                       </Link>
                     </td>
                   </tr>
@@ -229,13 +244,21 @@ export const InstitutionsPage: React.FC = () => {
 
       {/* Modal: Add Technical Institution */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-6 border border-slate-300">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wide">
-                Register Technical Institution
-              </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-gov-modal max-w-xl w-full p-6 border border-gov-border">
+            <div className="flex items-center justify-between pb-3 border-b border-gov-border">
+              <div>
+                <h3 className="font-bold text-sm text-gov-dark uppercase tracking-wider">
+                  Register Technical Institution
+                </h3>
+                <p className="text-[11px] text-gov-muted mt-0.5">
+                  AICTE Central Institutional Directory Record Entry
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -246,7 +269,7 @@ export const InstitutionsPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleAddSubmit} className="mt-4 space-y-3 text-xs">
+            <form onSubmit={handleAddSubmit} className="mt-4 space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
@@ -258,7 +281,7 @@ export const InstitutionsPage: React.FC = () => {
                     placeholder="e.g. DEMO-AICTE-006"
                     value={formData.permanent_id}
                     onChange={(e) => setFormData({ ...formData, permanent_id: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 font-mono"
+                    className="gov-input font-mono"
                   />
                 </div>
                 <div>
@@ -268,7 +291,7 @@ export const InstitutionsPage: React.FC = () => {
                   <select
                     value={formData.institution_type}
                     onChange={(e) => setFormData({ ...formData, institution_type: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select w-full"
                   >
                     <option value="Engineering & Technology">Engineering & Technology</option>
                     <option value="Management">Management</option>
@@ -286,10 +309,10 @@ export const InstitutionsPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Demonstration Institute of Technology"
+                  placeholder="e.g. Demonstration Institute of Technology & Science"
                   value={formData.institution_name}
                   onChange={(e) => setFormData({ ...formData, institution_name: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                  className="gov-input"
                 />
               </div>
 
@@ -301,7 +324,7 @@ export const InstitutionsPage: React.FC = () => {
                   placeholder="Street address / campus location"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                  className="gov-input"
                 />
               </div>
 
@@ -313,7 +336,7 @@ export const InstitutionsPage: React.FC = () => {
                     required
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-input"
                   />
                 </div>
                 <div>
@@ -323,7 +346,7 @@ export const InstitutionsPage: React.FC = () => {
                     required
                     value={formData.district}
                     onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-input"
                   />
                 </div>
                 <div>
@@ -333,7 +356,7 @@ export const InstitutionsPage: React.FC = () => {
                     required
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-input"
                   />
                 </div>
               </div>
@@ -344,7 +367,7 @@ export const InstitutionsPage: React.FC = () => {
                   <select
                     value={formData.region_id}
                     onChange={(e) => setFormData({ ...formData, region_id: parseInt(e.target.value) })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select w-full"
                   >
                     {regions.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -354,31 +377,31 @@ export const InstitutionsPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Postal Code *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Postal Code (PIN) *</label>
                   <input
                     type="text"
                     required
                     value={formData.postal_code}
                     onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 font-mono"
+                    className="gov-input font-mono"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-gov-border">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded text-slate-700 font-semibold"
+                  className="gov-btn gov-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-gov-primary hover:bg-gov-dark text-white rounded font-semibold"
+                  className="gov-btn gov-btn-primary"
                 >
-                  {submitting ? 'Registering...' : 'Save Institution'}
+                  {submitting ? 'Registering...' : 'Save & Register Institution'}
                 </button>
               </div>
             </form>

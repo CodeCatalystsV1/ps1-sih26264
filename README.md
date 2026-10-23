@@ -319,14 +319,19 @@ Navigate to **Reports & Analytics**:
 ## 11. Automated Testing
 
 The project includes an end-to-end backend test suite verifying all critical modules:
-- Authentication & JWT token issuance.
-- Institution registry uniqueness & profile aggregation.
-- Deterministic cross-bureau overlap detection logic.
-- Lifecycle state transitions and invalid transition rejection.
+- Authentication & JWT token issuance (valid/invalid credentials).
+- Institution registry uniqueness & duplicate Permanent ID rejection.
+- Consolidated institution profile aggregation.
+- Deterministic cross-bureau overlap detection logic & alert verification.
+- Valid vs. invalid case lifecycle state transitions.
 - Inter-bureau transfer history preservation.
-- Binary CSV, Excel, and PDF export integrity.
+- Server-side CSV, Excel (.xlsx), and PDF binary exports.
+- Object-level authorization & IDOR defense: Complainants denied access to administrative audits & case mutations.
+- Cross-bureau intervention defense: Officers forbidden from updating cases assigned to other bureaus.
+- Production configuration fail-safe: Insecure or default JWT secrets rejected in production environments.
+- Duplicate Permanent ID prevention during institution profile updates.
 
-To execute the tests:
+To execute the test suite:
 ```bash
 python -m pytest backend/tests/test_all_modules.py -v
 ```
@@ -334,32 +339,37 @@ python -m pytest backend/tests/test_all_modules.py -v
 **Actual Test Execution Results:**
 ```text
 ============================= test session starts =============================
-platform win32 -- Python 3.14.0a4, pytest-8.3.4, pluggy-1.5.0
+platform win32 -- Python 3.14, pytest-8.3.4, pluggy-1.5.0
 rootdir: C:\Users\HARISH R\Dropbox\SIH-2
-collected 8 items
+collected 12 items
 
-backend/tests/test_all_modules.py::test_auth_and_login PASSED            [ 12%]
-backend/tests/test_all_modules.py::test_institution_unique_permanent_id PASSED [ 25%]
-backend/tests/test_all_modules.py::test_institution_profile_consolidation PASSED [ 37%]
-backend/tests/test_all_modules.py::test_cross_bureau_overlap_detection PASSED [ 50%]
-backend/tests/test_all_modules.py::test_same_bureau_no_overlap PASSED    [ 62%]
-backend/tests/test_all_modules.py::test_case_status_transition_rules PASSED [ 75%]
-backend/tests/test_all_modules.py::test_transfer_case_preserves_history PASSED [ 87%]
-backend/tests/test_all_modules.py::test_report_exports_csv_excel_pdf PASSED [100%]
+backend/tests/test_all_modules.py::test_health_endpoint PASSED           [  8%]
+backend/tests/test_all_modules.py::test_auth_login_success_and_failure PASSED [ 16%]
+backend/tests/test_all_modules.py::test_institution_duplicate_permanent_id_rejected PASSED [ 25%]
+backend/tests/test_all_modules.py::test_institution_search_and_profile PASSED [ 33%]
+backend/tests/test_all_modules.py::test_deterministic_overlap_detection PASSED [ 41%]
+backend/tests/test_all_modules.py::test_case_status_transition_rules PASSED [ 50%]
+backend/tests/test_all_modules.py::test_inter_bureau_transfer_preserves_history PASSED [ 58%]
+backend/tests/test_all_modules.py::test_reports_and_exports PASSED       [ 66%]
+backend/tests/test_all_modules.py::test_unauthorized_complainant_cannot_access_audit_or_modify_cases PASSED [ 75%]
+backend/tests/test_all_modules.py::test_cross_bureau_case_modification_forbidden PASSED [ 83%]
+backend/tests/test_all_modules.py::test_production_config_secret_validation PASSED [ 91%]
+backend/tests/test_all_modules.py::test_institution_update_duplicate_permanent_id_rejected PASSED [100%]
 
-======================== 8 passed, 0 failed in 5.02s =========================
+======================= 12 passed, 22 warnings in 4.76s =======================
 ```
 
 ---
 
 ## 12. Security Architecture & Safeguards
 
-- **Backend Role & Scope Guardrails:** In `backend/app/core/permissions.py`, custom decorators and dependencies enforce regional and bureau boundary checks.
-- **Argon2 / Bcrypt Password Hashing:** Passwords are never stored in plaintext. Passwords are salted and hashed with direct Bcrypt bindings.
+- **Repository Hygiene:** All sensitive files (`.env`, `aicte_icms.db`, and compiled bytecode `*.pyc`) are strictly untracked from Git and excluded via `.gitignore`. A safe `.env.example` with placeholders is provided.
+- **Fail-Safe Secret Validation:** In `backend/app/core/config.py`, setting `ENVIRONMENT=production` mandates a cryptographically secure `SECRET_KEY` (minimum 32 characters, rejecting default development secrets) at application startup.
+- **Backend-Enforced Authorization & IDOR Defense:** In `backend/app/api/cases.py` and `backend/app/api/transfers.py`, `enforce_user_bureau_or_admin` and `enforce_user_region_or_admin` prevent unauthorized officers from accessing, modifying, or transferring cases outside their assigned bureau or regional jurisdiction.
+- **Bcrypt Password Hashing:** User passwords are encrypted using salted Bcrypt hashes before database persistence.
 - **SQL Injection Prevention:** 100% parameterization through SQLAlchemy ORM.
-- **Path Traversal Protection:** File uploads are assigned server-generated UUID storage tokens and stored outside the web root.
-- **Safe Document Serving:** Downloads require authenticated tokens and verify access rights before streaming file contents.
-- **Audit Immutability:** System audit entries have no delete or update endpoints in the administrative API.
+- **Path Traversal & File Upload Security:** Document uploads enforce strict MIME type whitelisting (PDF, JPG, PNG, DOCX), filename sanitization using `os.path.basename`, size limits (`MAX_UPLOAD_SIZE_MB`), and UUID-based secure storage paths.
+- **Audit Immutability:** System audit records are write-once; no update or delete endpoints exist in the administrative API, and only `ROLE_ADMIN` and `ROLE_MANAGEMENT` can query the log.
 
 ---
 

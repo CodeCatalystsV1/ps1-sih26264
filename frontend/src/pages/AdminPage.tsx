@@ -81,75 +81,79 @@ export const AdminPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-4 rounded-md border border-gov-border shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-gov-dark">User Accounts & Access Control</h1>
-          <p className="text-xs text-gov-muted mt-0.5">
-            Manage authorized officials, assigned roles, Bureau jurisdiction, and regional office scopes
-          </p>
+      <div className="gov-card p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              User Accounts & Role-Based Access Control (RBAC)
+            </h1>
+            <p className="text-xs text-slate-600">
+              Manage authorized AICTE officials, bureau assignments, regional jurisdiction scopes, and administrative privileges.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="gov-btn-primary text-xs flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create Official Account</span>
+          </button>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gov-primary hover:bg-gov-dark text-white text-xs font-semibold rounded shadow-sm transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Create Official Account
-        </button>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-md border border-gov-border shadow-sm overflow-hidden text-xs">
-        <div className="p-3 bg-slate-50 border-b border-gov-border flex items-center justify-between">
-          <span className="font-bold text-slate-800 uppercase tracking-wide">
-            Registered Government Officials & Users ({users.length})
+      <div className="gov-card overflow-hidden">
+        <div className="gov-card-header p-4 bg-slate-50/80 border-b border-gov-border flex items-center justify-between">
+          <span className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <Users className="w-4 h-4 text-gov-primary" />
+            Registered Official Directory ({users.length} Authorized Accounts)
           </span>
+          <span className="text-[11px] text-slate-500 font-mono">Government Protocol Compliance</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="gov-table-header">
-              <tr>
-                <th className="py-2.5 px-3">Username</th>
-                <th className="py-2.5 px-3">Official Display Name</th>
-                <th className="py-2.5 px-3">Email Address</th>
-                <th className="py-2.5 px-3">Assigned Role(s)</th>
-                <th className="py-2.5 px-3">Bureau / Region Jurisdiction</th>
-                <th className="py-2.5 px-3 text-center">Account Status</th>
+        <div className="gov-table-container">
+          <table className="gov-table">
+            <thead>
+              <tr className="gov-table-header">
+                <th className="min-w-[140px]">Username</th>
+                <th className="min-w-[190px]">Official Display Name</th>
+                <th className="min-w-[200px]">Email Address</th>
+                <th className="min-w-[170px]">Assigned Role(s)</th>
+                <th className="min-w-[220px]">Bureau / Region Jurisdiction</th>
+                <th className="min-w-[120px] text-center">Account Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    Loading user accounts...
+                  <td colSpan={6} className="py-8 text-center text-slate-500 font-medium">
+                    <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-gov-primary mb-2"></div>
+                    <p>Loading authorized accounts directory...</p>
                   </td>
                 </tr>
               ) : (
                 users.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-mono font-bold text-gov-primary">{u.username}</td>
-                    <td className="py-2.5 px-3 font-semibold text-slate-900">{u.display_name}</td>
-                    <td className="py-2.5 px-3 text-slate-600">{u.email}</td>
-                    <td className="py-2.5 px-3">
+                  <tr key={u.id} className="gov-table-row">
+                    <td className="font-mono font-bold text-gov-primary text-xs">{u.username}</td>
+                    <td className="font-semibold text-slate-900 text-xs">{u.display_name}</td>
+                    <td className="text-slate-600 font-mono text-xs">{u.email}</td>
+                    <td>
                       {u.roles?.map((r) => (
-                        <span key={r.id} className="inline-block mr-1 px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                        <span key={r.id} className="gov-badge-info mr-1 text-[10px] font-semibold">
                           {r.name}
                         </span>
                       ))}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-700">
+                    <td className="text-slate-700 text-xs">
                       {u.bureau_assignments?.[0]?.bureau?.name ? (
-                        <span>{u.bureau_assignments[0].bureau.name} ({u.bureau_assignments[0].bureau.code})</span>
+                        <span className="font-medium text-slate-900">{u.bureau_assignments[0].bureau.name} <span className="font-mono text-slate-500 font-normal">({u.bureau_assignments[0].bureau.code})</span></span>
                       ) : u.bureau_assignments?.[0]?.region?.name ? (
-                        <span>{u.bureau_assignments[0].region.name}</span>
+                        <span className="font-medium text-slate-900">{u.bureau_assignments[0].region.name}</span>
                       ) : (
-                        <span className="text-slate-400 italic">Central / Global Access</span>
+                        <span className="text-slate-500 italic">Central / All Bureaus</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        u.account_status === 'ACTIVE'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                    <td className="text-center">
+                      <span className={u.account_status === 'ACTIVE' ? 'gov-badge-success text-[10px]' : 'gov-badge-danger text-[10px]'}>
                         {u.account_status}
                       </span>
                     </td>
@@ -163,63 +167,64 @@ export const AdminPage: React.FC = () => {
 
       {/* Modal: Add User */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 border border-slate-300">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="gov-modal max-w-lg w-full p-6 animate-in fade-in duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wide">
+              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                <Shield className="w-4 h-4 text-gov-primary" />
                 Create Authorized Official Account
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-md">
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleAddUser} className="mt-4 space-y-3 text-xs">
+            <form onSubmit={handleAddUser} className="mt-4 space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Full Official Name *</label>
+                <label className="block font-bold text-slate-700 mb-1">Full Official Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Smt. Ananya Sen"
                   value={formData.display_name}
                   onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                  className="gov-input"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Official Email *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Official Email Address *</label>
                   <input
                     type="email"
                     required
-                    placeholder="official@aicte.gov.in"
+                    placeholder="official@aicte-india.org"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-input"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Username *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Username / ID *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. ananya_pgrc"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 font-mono"
+                    className="gov-input font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Initial Password *</label>
+                <label className="block font-bold text-slate-700 mb-1">Initial Temporary Password *</label>
                 <input
                   type="password"
                   required
@@ -227,16 +232,16 @@ export const AdminPage: React.FC = () => {
                   placeholder="••••••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-1.5 font-mono"
+                  className="gov-input font-mono"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Assigned Application Role *</label>
+                <label className="block font-bold text-slate-700 mb-1">Statutory Application Role *</label>
                 <select
                   value={formData.role_ids[0] || ''}
                   onChange={(e) => setFormData({ ...formData, role_ids: [parseInt(e.target.value)] })}
-                  className="w-full border border-slate-300 rounded px-2.5 py-2 font-medium"
+                  className="gov-select"
                 >
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -248,13 +253,13 @@ export const AdminPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Assigned Bureau / Cell</label>
+                  <label className="block font-bold text-slate-700 mb-1">Assigned Bureau / Cell</label>
                   <select
                     value={formData.bureau_id || ''}
                     onChange={(e) => setFormData({ ...formData, bureau_id: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select"
                   >
-                    <option value="">None / Not Applicable</option>
+                    <option value="">None / Not Bureau-Specific</option>
                     {bureaus.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name} ({b.code})
@@ -263,11 +268,11 @@ export const AdminPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Regional Jurisdiction</label>
+                  <label className="block font-bold text-slate-700 mb-1">Regional Jurisdiction</label>
                   <select
                     value={formData.region_id || ''}
                     onChange={(e) => setFormData({ ...formData, region_id: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="w-full border border-slate-300 rounded px-2.5 py-1.5"
+                    className="gov-select"
                   >
                     <option value="">None / All Regions</option>
                     {regions.map((reg) => (
@@ -283,16 +288,16 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded text-slate-700 font-semibold"
+                  className="gov-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-gov-primary hover:bg-gov-dark text-white rounded font-semibold"
+                  className="gov-btn-primary"
                 >
-                  {submitting ? 'Creating...' : 'Create Account'}
+                  {submitting ? 'Creating Account...' : 'Register Official Account'}
                 </button>
               </div>
             </form>
