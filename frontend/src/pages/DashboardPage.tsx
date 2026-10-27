@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import {
   DashboardMetrics,
@@ -15,7 +15,6 @@ import {
   GitCompare,
   AlertTriangle,
   RotateCw,
-  Clock,
   ArrowRight,
   ExternalLink,
   ChevronRight,
@@ -35,7 +34,6 @@ import {
 } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
-  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [statusDist, setStatusDist] = useState<StatusDistribution[]>([]);
   const [bureauWorkloads, setBureauWorkloads] = useState<BureauWorkload[]>([]);
@@ -73,149 +71,125 @@ export const DashboardPage: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  // Section A: 6 Executive Overview Indicators using real backend API metrics
   const activeCasesCount = (metrics?.pending_cases ?? 0) + (metrics?.cases_under_process ?? 0);
   const pendingCoordinationCount = overlaps.filter(
     (o) => o.relationship_state === 'POTENTIAL_OVERLAP' || o.relationship_state === 'COORDINATION_REQUESTED'
   ).length;
 
+  // 4 Core Executive KPI Indicators
   const executiveKpis = [
     {
       title: 'Total Institutions',
       value: metrics?.institutions_with_active_cases ?? 0,
       icon: Building2,
-      subtitle: `${metrics?.institutions_with_active_cases ?? 0} with active regulatory dockets`,
+      subtitle: 'Monitored across AICTE bureaus',
       link: '/institutions',
-      badgeColor: 'text-[#17365D]',
-      bgColor: 'bg-blue-50/70',
-      borderColor: 'border-blue-200/80',
+      iconBg: 'bg-blue-50 text-royal-main border-blue-200',
+      valueColor: 'text-royal-navy',
     },
     {
       title: 'Active Cases',
       value: activeCasesCount,
       icon: Briefcase,
-      subtitle: `${metrics?.cases_under_process ?? 0} in formal inquiry / verification`,
+      subtitle: `${metrics?.cases_under_process ?? 0} in active verification`,
       link: '/cases',
-      badgeColor: 'text-indigo-800',
-      bgColor: 'bg-indigo-50/70',
-      borderColor: 'border-indigo-200/80',
+      iconBg: 'bg-indigo-50 text-royal-deep border-indigo-200',
+      valueColor: 'text-royal-navy',
     },
     {
-      title: 'Potential Overlaps',
+      title: 'Cross-Bureau Overlaps',
       value: metrics?.potential_overlaps ?? 0,
       icon: GitCompare,
-      subtitle: 'Simultaneous cross-bureau inquiries',
+      subtitle: `${pendingCoordinationCount} pending inter-bureau review`,
       link: '/coordination',
-      badgeColor: 'text-red-700',
-      bgColor: 'bg-red-50/80',
-      borderColor: 'border-red-300',
+      iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
+      valueColor: 'text-amber-800',
     },
     {
-      title: 'Pending Coordination',
-      value: pendingCoordinationCount,
-      icon: RotateCw,
-      subtitle: 'Awaiting joint review & alignment',
-      link: '/coordination',
-      badgeColor: 'text-amber-800',
-      bgColor: 'bg-amber-50/80',
-      borderColor: 'border-amber-300',
-    },
-    {
-      title: 'Overdue Cases',
+      title: 'Statutory SLA Overdue',
       value: metrics?.overdue_cases ?? 0,
       icon: AlertTriangle,
-      subtitle: 'Exceeded statutory disposal SLA',
+      subtitle: 'Requires immediate attention',
       link: '/deadlines',
-      badgeColor: 'text-rose-800',
-      bgColor: 'bg-rose-50/80',
-      borderColor: 'border-rose-300',
-    },
-    {
-      title: 'Cases Requiring Attention',
-      value: (metrics?.overdue_cases ?? 0) + (metrics?.potential_overlaps ?? 0),
-      icon: Clock,
-      subtitle: 'Overdue items + pending overlaps',
-      link: '/deadlines',
-      badgeColor: 'text-teal-900',
-      bgColor: 'bg-teal-50/80',
-      borderColor: 'border-teal-300',
+      iconBg: 'bg-rose-50 text-rose-600 border-rose-200',
+      valueColor: 'text-rose-700',
     },
   ];
 
-  // Colors for Recharts Bureau workload
+  // Recharts color palette
   const bureauColors: Record<string, string> = {
-    PGRC: '#17365D',
-    RB: '#0D9488',
-    AB: '#B45309',
-    FB: '#4338CA',
+    PGRC: '#2563EB', // Royal Blue
+    RB: '#1E40AF',   // Deep Blue
+    AB: '#0D9488',   // Teal
+    FB: '#475569',   // Slate
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Executive Masthead Banner */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200/90 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded border border-teal-200 font-mono uppercase tracking-wider">
-              AICTE Case360+ Executive Portal &bull; SIH PS 26264
+            <span className="text-[11px] font-bold text-royal-main bg-blue-50 px-3 py-1 rounded-full border border-blue-200 font-mono uppercase tracking-wider inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-royal-main animate-pulse" />
+              AICTE Case360+ Executive Portal
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1.5 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Institutional Complaint Monitoring & Multi-Bureau Coordination
           </h1>
-          <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">
-            Centralized institution-centric view across Public Grievance Redressal Cell (PGRC), Regulation Bureau (RB), and Regional Offices. Proactively detects cross-bureau inquiry overlaps, flags SLA deadlines, and facilitates coordinated administrative actions.
+          <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            Real-time oversight unifying Public Grievance Redressal Cell (PGRC), Regulation Bureau (RB), and Regional Offices. Proactively detects conflicting actions and aligns regulatory dispositions.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+            id="refresh-dashboard-btn"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-teal-600' : ''}`} />
-            <span>Refresh Live Data</span>
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-royal-main' : 'text-slate-500'}`} />
+            <span>Refresh</span>
           </button>
           <Link
             to="/coordination"
-            className="px-3.5 py-2 bg-[#102A43] hover:bg-[#17365D] text-white text-xs font-semibold rounded-md shadow-xs flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-royal-main hover:bg-royal-deep text-white text-xs font-semibold rounded-lg shadow-soft flex items-center gap-1.5 transition-all hover:shadow-elevated"
+            id="open-coordination-btn"
           >
-            <GitCompare className="w-3.5 h-3.5 text-teal-400" />
+            <GitCompare className="w-4 h-4 text-sky-200" />
             <span>Coordination Hub</span>
           </Link>
         </div>
       </div>
 
-      {/* SECTION A — Executive Overview (6 Real Backend Metric Cards) */}
+      {/* 4 Core KPI Cards */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-[#17365D]" />
-            Section A: Executive Overview & Key Administrative Indicators
-          </h2>
-          <span className="text-[11px] text-slate-500 font-mono">Real database aggregations</span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {executiveKpis.map((kpi, idx) => {
             const Icon = kpi.icon;
             return (
               <Link
                 key={idx}
                 to={kpi.link}
-                className={`p-4 rounded-lg border ${kpi.borderColor} ${kpi.bgColor} hover:shadow-md transition-all group flex flex-col justify-between`}
+                className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-soft card-interactive flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold text-slate-700 truncate">{kpi.title}</span>
-                    <Icon className={`w-4 h-4 ${kpi.badgeColor} shrink-0`} />
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold text-slate-600 truncate pr-1">{kpi.title}</span>
+                    <div className={`p-2 rounded-lg border ${kpi.iconBg} shrink-0`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
                   </div>
-                  <div className={`text-2xl font-extrabold ${kpi.badgeColor} tracking-tight`}>
+                  <div className={`text-3xl font-extrabold ${kpi.valueColor} tracking-tight`}>
                     {loading ? '...' : kpi.value}
                   </div>
                 </div>
-                <div className="mt-2 pt-2 border-t border-slate-200/60 text-[10px] text-slate-600 flex items-center justify-between">
+
+                <div className="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
                   <span className="truncate pr-1">{kpi.subtitle}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-royal-main group-hover:translate-x-0.5 transition-all shrink-0" />
                 </div>
               </Link>
             );
@@ -223,45 +197,48 @@ export const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION B — Cross-Bureau Intelligence Table */}
-      <section className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GitCompare className="w-4 h-4 text-red-600" />
+      {/* Active Cross-Bureau Overlaps Table */}
+      <section className="bg-white rounded-xl border border-slate-200/90 shadow-soft overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200/90 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-royal-main">
+              <GitCompare className="w-4 h-4" />
+            </div>
             <div>
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Section B: Cross-Bureau Intelligence — Active & Potential Overlaps
+                Active Cross-Bureau Overlaps
               </h2>
               <p className="text-[11px] text-slate-500">
-                AICTE Permanent ID verification detects simultaneous active cases across differing Bureaus
+                Simultaneous proceedings across differing AICTE bureaus detected for verified institutions
               </p>
             </div>
           </div>
           <Link
             to="/coordination"
-            className="text-xs font-semibold text-[#17365D] hover:underline flex items-center gap-1"
+            className="text-xs font-semibold text-royal-main hover:text-royal-deep hover:underline inline-flex items-center gap-1 shrink-0"
           >
-            Open Full Workspace <ExternalLink className="w-3 h-3" />
+            <span>Open Coordination Hub</span>
+            <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className="bg-slate-50 text-slate-700 font-bold">
+            <thead className="bg-slate-50/80 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="py-2.5 px-4 text-left">Institution Name</th>
-                <th className="py-2.5 px-4 text-left">AICTE Permanent ID</th>
-                <th className="py-2.5 px-4 text-left">Involved Bureaus</th>
-                <th className="py-2.5 px-4 text-center">Active Cases</th>
-                <th className="py-2.5 px-4 text-left">Overlap Status</th>
-                <th className="py-2.5 px-4 text-left">Assigned Reviewer</th>
-                <th className="py-2.5 px-4 text-right">Review Action</th>
+                <th className="py-3 px-5 text-left">Institution Name</th>
+                <th className="py-3 px-4 text-left">Permanent ID</th>
+                <th className="py-3 px-4 text-left">Involved Bureaus</th>
+                <th className="py-3 px-4 text-center">Active Cases</th>
+                <th className="py-3 px-4 text-left">Overlap Status</th>
+                <th className="py-3 px-4 text-left">Assigned Reviewer</th>
+                <th className="py-3 px-5 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-800">
               {overlaps.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-6 text-slate-500">
+                  <td colSpan={7} className="text-center py-8 text-slate-500">
                     No active cross-bureau overlaps currently detected.
                   </td>
                 </tr>
@@ -270,50 +247,50 @@ export const DashboardPage: React.FC = () => {
                   const caseCount = flag.involved_cases?.length ?? 2;
                   return (
                     <tr key={flag.id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-slate-900">
+                      <td className="py-3.5 px-5 font-semibold text-slate-900">
                         <Link
                           to={`/institutions/${flag.institution_id}`}
-                          className="hover:text-[#17365D] hover:underline"
+                          className="hover:text-royal-main hover:underline transition-colors"
                         >
                           {flag.institution_name || `Institution #${flag.institution_id}`}
                         </Link>
-                        <div className="text-[10px] text-slate-500 font-normal">
+                        <div className="text-[10px] text-slate-500 font-normal mt-0.5">
                           {flag.institution_state} &bull; {flag.institution_region}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-mono font-medium text-slate-700">
+                      <td className="py-3.5 px-4 font-mono font-medium text-slate-700">
                         {flag.permanent_id || 'N/A'}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="flex flex-wrap gap-1">
                           {flag.involved_bureaus && flag.involved_bureaus.length > 0 ? (
                             flag.involved_bureaus.map((bName: string, bi: number) => (
                               <span
                                 key={bi}
-                                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300"
+                                className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-royal-deep border border-blue-200"
                               >
                                 {bName}
                               </span>
                             ))
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
                               PGRC + Regulation Bureau
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800">
-                          {caseCount}
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                          {caseCount} Active
                         </span>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                             flag.relationship_state === 'POTENTIAL_OVERLAP'
-                              ? 'bg-red-50 text-red-800 border border-red-200'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
                               : flag.relationship_state === 'CONFIRMED_RELATED'
-                              ? 'bg-purple-50 text-purple-800 border border-purple-200'
+                              ? 'bg-blue-50 text-royal-deep border border-blue-200'
                               : flag.relationship_state === 'COORDINATION_REQUESTED'
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-slate-100 text-slate-700 border border-slate-200'
@@ -322,17 +299,18 @@ export const DashboardPage: React.FC = () => {
                           {flag.relationship_state.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3.5 px-4 text-slate-600">
                         {flag.reviewed_by_name || flag.coordination_owner_name || (
                           <span className="text-slate-400 italic">Unassigned (HQ Pool)</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3.5 px-5 text-right">
                         <Link
                           to="/coordination"
-                          className="px-2.5 py-1 text-[11px] font-semibold text-white bg-[#102A43] hover:bg-[#17365D] rounded transition-colors inline-flex items-center gap-1 shadow-2xs"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-royal-main hover:bg-royal-deep rounded-lg transition-all inline-flex items-center gap-1 shadow-xs hover:shadow-soft"
                         >
-                          Coordinate <ArrowRight className="w-3 h-3 text-teal-400" />
+                          <span>Coordinate</span>
+                          <ArrowRight className="w-3 h-3 text-sky-200" />
                         </Link>
                       </td>
                     </tr>
@@ -344,50 +322,51 @@ export const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION C & SECTION D: Visualizations Grid */}
+      {/* Visualizations Grid: Bureau Workload & Case Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* SECTION C — Bureau Workload */}
-        <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+        {/* Bureau Workload Chart */}
+        <section className="bg-white rounded-xl border border-slate-200/90 p-5 sm:p-6 shadow-soft">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div>
-              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="w-4 h-4 text-teal-700" />
-                Section C: Bureau Workload & Pending Docket Distribution
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-royal-main" />
+                <span>Bureau Workload Distribution</span>
               </h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Comparison of active inquiry load across AICTE administrative bureaus
+                Active dockets assigned across AICTE administrative cells
               </p>
             </div>
-            <Link to="/cases" className="text-xs font-semibold text-[#17365D] hover:underline">
-              View All Cases &rarr;
+            <Link to="/cases" className="text-xs font-semibold text-royal-main hover:underline">
+              View Cases &rarr;
             </Link>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={bureauWorkloads} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF6FF" />
                 <XAxis
                   dataKey="bureau_code"
-                  tick={{ fontSize: 11, fill: '#475569' }}
+                  tick={{ fontSize: 11, fill: '#475569', fontWeight: 600 }}
                   tickLine={false}
                 />
-                <YAxis tick={{ fontSize: 11, fill: '#475569' }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#64748B' }} tickLine={false} />
                 <Tooltip
                   formatter={(val: any) => [`${val} Cases`, 'Workload']}
                   contentStyle={{
-                    backgroundColor: '#1E293B',
-                    borderRadius: '6px',
+                    backgroundColor: '#0F172A',
+                    borderRadius: '8px',
                     color: '#fff',
                     fontSize: '11px',
-                    border: 'none',
+                    border: '1px solid #1E40AF',
+                    boxShadow: '0 10px 25px rgba(37,99,235,0.2)',
                   }}
                 />
-                <Bar dataKey="total_assigned" name="Assigned Cases" radius={[4, 4, 0, 0]}>
+                <Bar dataKey="total_assigned" name="Assigned Cases" radius={[6, 6, 0, 0]}>
                   {bureauWorkloads.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={bureauColors[entry.bureau_code] || '#17365D'}
+                      fill={bureauColors[entry.bureau_code] || '#2563EB'}
                     />
                   ))}
                 </Bar>
@@ -395,80 +374,85 @@ export const DashboardPage: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-100 text-center">
             {bureauWorkloads.map((b) => (
-              <div key={b.bureau_id} className="p-2 bg-slate-50 rounded border border-slate-200">
+              <div key={b.bureau_id} className="p-2.5 bg-slate-50/80 rounded-lg border border-slate-200">
                 <div className="text-[10px] font-bold text-slate-500 uppercase">{b.bureau_code}</div>
-                <div className="text-sm font-extrabold text-slate-900 mt-0.5">{b.total_assigned} Total</div>
-                <div className="text-[9px] text-slate-500">{b.pending_count} Pending</div>
+                <div className="text-base font-extrabold text-slate-900 mt-0.5">{b.total_assigned} Total</div>
+                <div className="text-[10px] text-royal-main font-medium">{b.pending_count} Active</div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* SECTION D — Case Status Monitoring */}
-        <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+        {/* Case Status Lifecycle */}
+        <section className="bg-white rounded-xl border border-slate-200/90 p-5 sm:p-6 shadow-soft">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div>
-              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-[#17365D]" />
-                Section D: Case Status Monitoring & Lifecycle Progression
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Shield className="w-4 h-4 text-royal-main" />
+                <span>Case Status Lifecycle</span>
               </h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Official grievance dockets distributed by regulatory processing stage
               </p>
             </div>
-            <Link to="/reports" className="text-xs font-semibold text-[#17365D] hover:underline">
+            <Link to="/reports" className="text-xs font-semibold text-royal-main hover:underline">
               Detailed Analytics &rarr;
             </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="p-3 bg-blue-50/80 rounded-md border border-blue-200">
-              <div className="text-[10px] font-bold uppercase text-blue-900">New Intake / Received</div>
-              <div className="text-xl font-extrabold text-blue-950 mt-1">
+            <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-200/80">
+              <div className="text-[10px] font-bold uppercase text-royal-navy">New Intake / Received</div>
+              <div className="text-2xl font-extrabold text-royal-deep mt-1">
                 {statusDist.find((s) => s.status === 'Received')?.count ?? 0}
               </div>
-              <div className="text-[10px] text-blue-700 mt-0.5">Initial registration & scrutiny</div>
+              <div className="text-[10px] text-royal-main mt-0.5">Initial scrutiny & logging</div>
             </div>
-            <div className="p-3 bg-teal-50/80 rounded-md border border-teal-200">
-              <div className="text-[10px] font-bold uppercase text-teal-900">Under Investigation / Verification</div>
-              <div className="text-xl font-extrabold text-teal-950 mt-1">
+
+            <div className="p-3.5 bg-sky-50/60 rounded-xl border border-sky-200/80">
+              <div className="text-[10px] font-bold uppercase text-sky-900">Under Investigation</div>
+              <div className="text-2xl font-extrabold text-sky-950 mt-1">
                 {(statusDist.find((s) => s.status === 'Under Verification')?.count ?? 0) +
                   (statusDist.find((s) => s.status === 'Under Scrutiny')?.count ?? 0)}
               </div>
-              <div className="text-[10px] text-teal-700 mt-0.5">Institution response verification</div>
+              <div className="text-[10px] text-sky-700 mt-0.5">Active inquiry & inspection</div>
             </div>
-            <div className="p-3 bg-amber-50/80 rounded-md border border-amber-200">
+
+            <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-200/80">
               <div className="text-[10px] font-bold uppercase text-amber-900">Pending Coordination</div>
-              <div className="text-xl font-extrabold text-amber-950 mt-1">
+              <div className="text-2xl font-extrabold text-amber-950 mt-1">
                 {pendingCoordinationCount}
               </div>
-              <div className="text-[10px] text-amber-700 mt-0.5">Cross-bureau committee review</div>
+              <div className="text-[10px] text-amber-700 mt-0.5">Inter-bureau review</div>
             </div>
-            <div className="p-3 bg-emerald-50/80 rounded-md border border-emerald-200">
+
+            <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/80">
               <div className="text-[10px] font-bold uppercase text-emerald-900">Disposed / Resolved</div>
-              <div className="text-xl font-extrabold text-emerald-950 mt-1">
+              <div className="text-2xl font-extrabold text-emerald-950 mt-1">
                 {metrics?.disposed_cases ?? 0}
               </div>
-              <div className="text-[10px] text-emerald-700 mt-0.5">Action taken / closure orders</div>
+              <div className="text-[10px] text-emerald-700 mt-0.5">Final order issued</div>
             </div>
           </div>
 
-          {/* Overdue statutory cases quick alert */}
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-md flex items-center justify-between">
+          {/* Overdue Alert Banner */}
+          <div className="p-3.5 bg-rose-50/80 border border-rose-200 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
+              <div className="p-1.5 rounded-lg bg-rose-100 text-rose-700">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+              </div>
               <div>
                 <span className="text-xs font-bold text-rose-900">
-                  {metrics?.overdue_cases ?? 0} Cases Currently Overdue Past Configured SLA
+                  {metrics?.overdue_cases ?? 0} Cases Currently Overdue Past Statutory SLA
                 </span>
-                <p className="text-[10px] text-rose-700">Immediate supervisor intervention recommended</p>
+                <p className="text-[10px] text-rose-700">Immediate supervisory review recommended</p>
               </div>
             </div>
             <Link
               to="/deadlines"
-              className="px-2.5 py-1 text-[11px] font-semibold text-rose-900 bg-rose-100 hover:bg-rose-200 rounded transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold text-rose-800 bg-rose-100 hover:bg-rose-200 rounded-lg transition-colors shrink-0"
             >
               Inspect &rarr;
             </Link>
@@ -476,50 +460,54 @@ export const DashboardPage: React.FC = () => {
         </section>
       </div>
 
-      {/* SECTION E — Recent Workflow Activity */}
-      <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+      {/* Recent Regulatory Activity Timeline */}
+      <section className="bg-white rounded-xl border border-slate-200/90 p-5 sm:p-6 shadow-soft">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#17365D]" />
+            <div className="p-1.5 rounded-lg bg-blue-50 text-royal-main border border-blue-200">
+              <Activity className="w-4 h-4" />
+            </div>
             <div>
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Section E: Recent Audit Activity & Inter-Bureau Workflow Stream
+                Recent Regulatory Activity
               </h2>
               <p className="text-[11px] text-slate-500">
-                Live, immutable event log from database workflow history and audit records
+                Event sequence captured across case transitions and officer reviews
               </p>
             </div>
           </div>
-          <Link to="/audit" className="text-xs font-semibold text-[#17365D] hover:underline">
-            Full Audit Trail &rarr;
+          <Link to="/audit" className="text-xs font-semibold text-royal-main hover:underline">
+            Audit Trail &rarr;
           </Link>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {recentActivities.length === 0 ? (
-            <div className="text-center py-6 text-slate-500 text-xs">No recent activity recorded yet.</div>
+            <div className="text-center py-8 text-slate-500 text-xs">No recent activity recorded yet.</div>
           ) : (
             recentActivities.map((act) => (
               <div
                 key={act.id}
-                className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-md border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-colors"
+                className="p-3.5 bg-slate-50/70 hover:bg-blue-50/30 rounded-xl border border-slate-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-colors"
               >
-                <div className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-teal-600 mt-1.5 shrink-0"></span>
+                <div className="flex items-start gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-royal-main mt-1 shrink-0 ring-4 ring-blue-100" />
                   <div>
                     <span className="font-bold text-slate-900">{act.action_type.replace(/_/g, ' ')}</span>
-                    <span className="text-slate-600 mx-1.5">&bull;</span>
+                    <span className="text-slate-400 mx-2">&bull;</span>
                     <span className="text-slate-700">{act.remarks || 'Administrative action logged'}</span>
                     {act.previous_value && act.new_value && (
                       <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                        {act.previous_value} &rarr; <span className="text-teal-700 font-semibold">{act.new_value}</span>
+                        {act.previous_value} &rarr; <span className="text-royal-main font-semibold">{act.new_value}</span>
                       </div>
                     )}
                   </div>
                 </div>
                 <div className="text-right shrink-0 text-[10px] text-slate-500 sm:self-center font-mono">
-                  <div>{act.performed_by_name || 'System Scheduler'}</div>
-                  <div>{new Date(act.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                  <div className="font-semibold text-slate-700">{act.performed_by_name || 'System Scheduler'}</div>
+                  <div className="text-slate-400">
+                    {new Date(act.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                  </div>
                 </div>
               </div>
             ))
@@ -529,3 +517,5 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+
+export default DashboardPage;

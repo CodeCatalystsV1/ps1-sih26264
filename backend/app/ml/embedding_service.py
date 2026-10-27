@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Embedding Generation Service
-Phase 3E: Multilingual-E5-small Inference, LRU Caching and Cosine Metrics (SIH 26264)
+Phase 3E: Multilingual-E5-small Inference, LRU Caching and Cosine Metrics
 """
 
 import hashlib

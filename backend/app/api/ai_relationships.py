@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — AI Complaint Relationship API Router
-Phase 3H: Endpoints for ML inference, relationship listing, officer review, and audit trail (SIH 26264)
+Phase 3H: Endpoints for ML inference, relationship listing, officer review, and audit trail
 """
 
 import json

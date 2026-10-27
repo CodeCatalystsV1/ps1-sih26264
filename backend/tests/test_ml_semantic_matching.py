@@ -1,6 +1,6 @@
 """
 Unit Tests for Semantic Similarity & Embedding Pipeline (Phase 3E)
-AICTE Case360+ (SIH 26264)
+AICTE Case360+
 """
 
 import numpy as np

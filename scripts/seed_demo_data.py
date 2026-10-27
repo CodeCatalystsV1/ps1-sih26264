@@ -19,7 +19,7 @@ from backend.app.core.security import get_password_hash
 from backend.app.services.overlap_service import detect_overlaps_for_institution
 
 def seed_database():
-    print("Initializing Database schema for AICTE Case360+ (PS 26264)...")
+    print("Initializing Database schema for AICTE Case360+...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
@@ -160,7 +160,7 @@ def seed_database():
         print("[OK] SLA Rules seeded.")
 
         # 7. Seed Fictional Demonstration Institutions (10 Total)
-        # All institutions explicitly labelled as Fictional SIH Demonstration Entities
+        # All institutions explicitly labelled as Fictional Demonstration Entities
         institutions_data = [
             ("DEMO-AICTE-001", "Demo Institute A — Technology & Science", "Engineering & Technology", "Knowledge City, Sector 62", "Noida", "Gautam Buddha Nagar", "Uttar Pradesh", "NRO", "Kanpur", "201301", "contact@demo-inst-a.ac.in", "VERIFIED"),
             ("DEMO-AICTE-002", "Demo Institute B — College of Engineering", "Engineering & Technology", "University Road, Shivaji Nagar", "Pune", "Pune", "Maharashtra", "WRO", "Mumbai", "411005", "info@demo-inst-b.edu.in", "VERIFIED"),
@@ -200,7 +200,7 @@ def seed_database():
         print(f"[OK] {len(institutions_data)} Fictional Demonstration Institutions seeded.")
 
         # =========================================================================
-        # SEED SIH PS 26264 DEMO SCENARIOS
+        # SEED CASE360+ CROSS-BUREAU DEMO SCENARIOS
         # =========================================================================
 
         # SCENARIO A: Two Related Complaints across PGRC and RB (DEMO-AICTE-001)

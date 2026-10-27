@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Semantic Similarity Engine
-Phase 3E: Cosine Distance Ranking and Vector Search (SIH 26264)
+Phase 3E: Cosine Distance Ranking and Vector Search
 """
 
 from dataclasses import dataclass

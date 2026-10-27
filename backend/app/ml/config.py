@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Machine Learning Configuration
-Phase 3: AI Complaint Relationship Intelligence (SIH 26264)
+Phase 3: AI Complaint Relationship Intelligence
 """
 
 from typing import Final

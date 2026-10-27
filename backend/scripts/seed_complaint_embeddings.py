@@ -1,7 +1,7 @@
 """
-AICTE Case360+ — Seed Embeddings and SIH Demonstration Scenarios (Phase 3J / Milestone 3)
+AICTE Case360+ — Seed Embeddings and Cross-Bureau Demonstration Scenarios (Phase 3J / Milestone 3)
 Computes real multilingual-e5-small embeddings for all database complaints
-and seeds SIH Scenarios A, B, C, D, E, F.
+and seeds demonstration Scenarios A, B, C, D, E, F.
 """
 
 import sys
@@ -23,8 +23,8 @@ from backend.app.services.complaint_matching_service import ComplaintMatchingSer
 from backend.app.ml.config import MLConfig
 
 
-def seed_sih_demo_complaints(db):
-    print("\n--- 1. Ensuring SIH Phase 3 Demonstration Complaints ---")
+def seed_demo_complaints(db):
+    print("\n--- 1. Ensuring Phase 3 Demonstration Complaints ---")
     inst_1 = db.query(Institution).filter(Institution.permanent_id == "DEMO-AICTE-001").first()
     inst_2 = db.query(Institution).filter(Institution.permanent_id == "DEMO-AICTE-002").first()
     bureau_pgrc = db.query(Bureau).filter(Bureau.code == "PGRC").first()
@@ -167,9 +167,9 @@ def main():
     print("=" * 70)
     db = SessionLocal()
     try:
-        seed_sih_demo_complaints(db)
+        seed_demo_complaints(db)
         compute_all_embeddings_and_match(db)
-        print("\nAll embeddings, vectors, and SIH demonstration records successfully seeded.")
+        print("\nAll embeddings, vectors, and demonstration records successfully seeded.")
     finally:
         db.close()
 

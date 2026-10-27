@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Institution Matching Engine
-Phase 3D: Deterministic Permanent ID and RapidFuzz Fuzzy Name Matching (SIH 26264)
+Phase 3D: Deterministic Permanent ID and RapidFuzz Fuzzy Name Matching
 """
 
 import re

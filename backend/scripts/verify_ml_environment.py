@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AICTE Case360+ — Machine Learning Environment Verification Script
-Phase 3A Dependency and Runtime Check (SIH 26264)
+Phase 3A Dependency and Runtime Check
 
 Verifies that PyTorch (CPU), Sentence Transformers, RapidFuzz, NumPy,
 and existing core FastAPI dependencies are properly installed, mutually compatible,

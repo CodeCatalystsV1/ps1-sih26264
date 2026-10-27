@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AICTE Case360+ — Multilingual E5-small Real Model Smoke Test Script
-Phase 3B Verification (SIH 26264)
+Phase 3B Verification
 
 Executes real CPU inference on intfloat/multilingual-e5-small,
 evaluating English, Tamil, and cross-subject pairs with timing metrics.

@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Complaint Text Preprocessing Engine
-Phase 3E: Normalization, Multilingual Script Preservation, and Negation-Safe Cleaning (SIH 26264)
+Phase 3E: Normalization, Multilingual Script Preservation, and Negation-Safe Cleaning
 """
 
 import re

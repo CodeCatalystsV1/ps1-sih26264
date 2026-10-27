@@ -160,44 +160,44 @@ export const AIRelationshipPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner / Header */}
-      <div className="bg-[#102A43] text-white p-6 rounded-lg shadow-md border border-slate-700">
+      <div className="bg-white p-6 rounded-xl shadow-soft border border-slate-200/90">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="p-1.5 bg-teal-500/20 text-teal-300 rounded-md border border-teal-500/40">
-                <Sparkles className="w-5 h-5 text-teal-400" />
+              <span className="p-2 bg-blue-50 text-royal-main rounded-lg border border-blue-200">
+                <Sparkles className="w-5 h-5 text-royal-main" />
               </span>
-              <h1 className="text-xl font-bold tracking-tight text-white">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
                 AI Complaint Relationship Intelligence Engine
               </h1>
-              <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-600 rounded-full">
-                Phase 3 Active
+              <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-royal-main border border-blue-200 rounded-full font-mono">
+                Multilingual E5 Live
               </span>
             </div>
-            <p className="text-xs text-slate-300 max-w-3xl">
+            <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
               Detects hidden cross-bureau grievances and related disputes using pretrained{' '}
-              <span className="text-teal-300 font-medium">multilingual-e5-small</span> semantic embeddings,
+              <span className="text-royal-deep font-semibold">multilingual-e5-small</span> semantic embeddings,
               verified AICTE Permanent IDs, and explainable human-in-the-loop administrative oversight.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="text-right hidden lg:block text-xs text-slate-300 bg-slate-800/80 px-3 py-2 rounded border border-slate-700">
-              <div className="font-semibold text-slate-200">
+            <div className="text-right hidden lg:block text-xs text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+              <div className="font-semibold text-slate-800">
                 Model: {stats?.model_identifier || 'intfloat/multilingual-e5-small'}
               </div>
-              <div className="text-[11px] text-teal-400">
-                384-Dim Normalized Embeddings • CPU Device
+              <div className="text-[11px] text-royal-main font-mono">
+                384-Dim Normalized Embeddings &bull; PyTorch CPU
               </div>
             </div>
             <button
               onClick={fetchData}
               disabled={loading}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-600 transition flex items-center gap-1.5 text-xs font-medium"
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 transition flex items-center gap-1.5 text-xs font-medium cursor-pointer"
               title="Refresh AI Data"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-teal-400' : ''}`} />
-              <span className="hidden sm:inline">Sync</span>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-royal-main' : ''}`} />
+              <span className="hidden sm:inline">Sync Data</span>
             </button>
           </div>
         </div>
@@ -205,57 +205,57 @@ export const AIRelationshipPage: React.FC = () => {
 
       {/* Section A: Live Overview KPI Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-l-amber-500 border border-slate-200">
+        <div className="bg-white p-5 rounded-xl shadow-soft card-interactive border-l-4 border-l-amber-500 border border-slate-200/90">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Pending Officer Review
           </div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
             {stats?.pending_suggestions_count ?? '—'}
           </div>
-          <p className="text-[11px] text-amber-700 mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-amber-700 mt-1 flex items-center gap-1 font-medium">
             <Clock className="w-3.5 h-3.5" /> Awaiting administrative scrutiny
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-l-emerald-600 border border-slate-200">
+        <div className="bg-white p-5 rounded-xl shadow-soft card-interactive border-l-4 border-l-emerald-600 border border-slate-200/90">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Approved Relationships
           </div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
             {stats?.approved_links_count ?? '—'}
           </div>
-          <p className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1 font-medium">
             <CheckCircle className="w-3.5 h-3.5" /> Confirmed related grievances
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-l-slate-400 border border-slate-200">
+        <div className="bg-white p-5 rounded-xl shadow-soft card-interactive border-l-4 border-l-slate-400 border border-slate-200/90">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Dismissed Suggestions
           </div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
             {stats?.dismissed_suggestions_count ?? '—'}
           </div>
-          <p className="text-[11px] text-slate-600 mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-slate-600 mt-1 flex items-center gap-1 font-medium">
             <XCircle className="w-3.5 h-3.5" /> Flagged as different issues
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-l-teal-600 border border-slate-200">
+        <div className="bg-white p-5 rounded-xl shadow-soft card-interactive border-l-4 border-l-royal-main border border-slate-200/90">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Grievances with Embeddings
           </div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">
+          <div className="text-2xl sm:text-3xl font-extrabold text-royal-deep mt-1">
             {stats?.total_analyzed_complaints_count ?? '—'}
           </div>
-          <p className="text-[11px] text-teal-700 mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-royal-main mt-1 flex items-center gap-1 font-medium">
             <Layers className="w-3.5 h-3.5" /> Indexed in vector repository
           </p>
         </div>
       </div>
 
-      {/* Section B: Find & Match Complaints Live Workspace */}
-      <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200 space-y-4">
+      {/* Section B: Find & Match Complaints Live Workspace (AI Panel) */}
+      <div className="ai-panel p-6 rounded-xl space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <FileSearch className="w-4 h-4 text-teal-700" />
@@ -288,45 +288,45 @@ export const AIRelationshipPage: React.FC = () => {
           <button
             onClick={handleRunAnalysis}
             disabled={!selectedComplaintId || isAnalyzing}
-            className={`w-full sm:w-auto px-5 py-2.5 rounded text-xs font-semibold flex items-center justify-center gap-2 transition ${
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
               !selectedComplaintId || isAnalyzing
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                : 'bg-teal-700 hover:bg-teal-800 text-white shadow-sm'
+                : 'bg-royal-main hover:bg-royal-deep text-white shadow-soft hover:shadow-elevated'
             }`}
           >
-            <Sparkles className={`w-4 h-4 ${isAnalyzing ? 'animate-spin text-amber-300' : ''}`} />
+            <Sparkles className={`w-4 h-4 ${isAnalyzing ? 'animate-spin text-amber-300' : 'text-sky-200'}`} />
             <span>{isAnalyzing ? 'Running E5-Small Model...' : 'Run AI Analysis'}</span>
           </button>
         </div>
 
         {/* Live Match Result Feedback Banner */}
         {matchResult && (
-          <div className="p-4 bg-teal-50 border border-teal-200 rounded-md space-y-2 text-xs">
-            <div className="flex items-center justify-between text-teal-900 font-bold">
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
+            <div className="flex items-center justify-between text-royal-navy font-bold">
               <span>
                 Analysis Result for {matchResult.source_reference}: {matchResult.source_title}
               </span>
-              <span className="bg-teal-200/80 text-teal-950 px-2 py-0.5 rounded text-[11px]">
+              <span className="bg-blue-200/80 text-royal-deep px-2 py-0.5 rounded text-[11px] font-mono">
                 {matchResult.suggestions_count} suggestion(s) retrieved from {matchResult.total_candidates_analyzed} candidates
               </span>
             </div>
-            <p className="text-teal-800 text-[11px]">
-              Institution: <span className="font-semibold">{matchResult.institution_name}</span> ({matchResult.permanent_id})
+            <p className="text-royal-deep text-[11px]">
+              Institution: <span className="font-semibold text-slate-900">{matchResult.institution_name}</span> ({matchResult.permanent_id})
             </p>
           </div>
         )}
       </div>
 
       {/* Section C: Suggestions Table & Filter Controls */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-soft border border-slate-200/90 overflow-hidden">
         {/* Tab Header */}
-        <div className="border-b border-slate-200 bg-slate-50/70 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="border-b border-slate-200 bg-slate-50/70 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('PENDING_REVIEW')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeTab === 'PENDING_REVIEW'
-                  ? 'bg-amber-600 text-white shadow-sm'
+                  ? 'bg-amber-600 text-white shadow-soft'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
@@ -334,9 +334,9 @@ export const AIRelationshipPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('APPROVED_LINK')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeTab === 'APPROVED_LINK'
-                  ? 'bg-emerald-700 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-soft'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
@@ -344,9 +344,9 @@ export const AIRelationshipPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('DISMISSED')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeTab === 'DISMISSED'
-                  ? 'bg-slate-700 text-white shadow-sm'
+                  ? 'bg-slate-700 text-white shadow-soft'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
@@ -354,9 +354,9 @@ export const AIRelationshipPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('ALL')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeTab === 'ALL'
-                  ? 'bg-slate-900 text-white shadow-sm'
+                  ? 'bg-royal-main text-white shadow-soft'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >

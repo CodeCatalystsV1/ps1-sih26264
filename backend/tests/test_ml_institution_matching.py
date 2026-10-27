@@ -1,6 +1,6 @@
 """
 Unit Tests for Institution Matching Engine (Phase 3D)
-AICTE Case360+ (SIH 26264)
+AICTE Case360+
 """
 
 import pytest

@@ -161,7 +161,7 @@ export const InstitutionDetailPage: React.FC = () => {
               </div>
               <div>
                 <span className="font-bold text-xs uppercase tracking-wider text-red-900 font-mono">
-                  STATUTORY ADVISORY &bull; PS-264
+                  STATUTORY ADVISORY &bull; CASE360+
                 </span>
                 <h3 className="text-sm font-bold text-red-950 mt-0.5">
                   Potential Overlapping Proceedings Detected Across Bureaus
@@ -400,7 +400,7 @@ export const InstitutionDetailPage: React.FC = () => {
             All AICTE Bureaus Associated With This Technical Institution
           </h3>
           <p className="text-slate-500">
-            PS-264 solves the coordination gap by displaying all Bureaus currently or historically taking regulatory or grievance redressal action for this institution:
+            Case360+ eliminates the coordination gap by displaying all Bureaus currently or historically taking regulatory or grievance redressal action for this institution:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             {institution.involved_bureaus.map((b, i) => (

@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Hybrid Relationship Scorer
-Phase 3F: Multi-Factor Decision Rules and Explainable AI Recommendations (SIH 26264)
+Phase 3F: Multi-Factor Decision Rules and Explainable AI Recommendations
 """
 
 from dataclasses import dataclass, field

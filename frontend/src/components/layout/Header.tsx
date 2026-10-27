@@ -1,18 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Bell, LogOut, ChevronDown, Building2, Shield, Users, Clock } from 'lucide-react';
+import {
+  Bell,
+  LogOut,
+  ChevronDown,
+  Menu,
+  CheckCircle2,
+  Shield,
+  UserCheck,
+} from 'lucide-react';
 import { apiRequest } from '../../api/client';
 import { AppNotification } from '../../types';
+import { AicteLogo } from '../common/AicteLogo';
 
-export const Header: React.FC = () => {
-  const { user, logout, switchUser } = useAuth();
-  const navigate = useNavigate();
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
-  const [currentTime, setCurrentTime] = useState<string>('');
+
+  const getPageTitle = (pathname: string): { title: string; category: string } => {
+    if (pathname === '/') return { title: 'Executive Overview', category: 'Dashboard' };
+    if (pathname.startsWith('/institutions')) return { title: 'Institution 360° Profiles', category: 'Registry' };
+    if (pathname.startsWith('/complaints')) return { title: 'Complaints & Grievances', category: 'Workflow' };
+    if (pathname.startsWith('/cases')) return { title: 'Regulatory Cases', category: 'Proceedings' };
+    if (pathname.startsWith('/coordination')) return { title: 'Coordination Hub', category: 'Inter-Bureau' };
+    if (pathname.startsWith('/action-conflicts')) return { title: 'Action Conflict Guard', category: 'Oversight' };
+    if (pathname.startsWith('/ai-relationships')) return { title: 'AI Relationship Intel', category: 'Neural Engine' };
+    if (pathname.startsWith('/audit')) return { title: 'Audit Trail', category: 'Compliance' };
+    return { title: 'Administrative Workspace', category: 'AICTE' };
+  };
+
+  const currentRouteMeta = getPageTitle(location.pathname);
 
   const fetchNotifications = async () => {
     try {
@@ -30,23 +56,6 @@ export const Header: React.FC = () => {
       return () => clearInterval(interval);
     }
   }, [user]);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleDateString('en-IN', {
-          weekday: 'short',
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      );
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -70,135 +79,71 @@ export const Header: React.FC = () => {
     }
   };
 
-  const quickSwitch = async (username: string, pass: string) => {
-    await switchUser(username, pass);
-    setShowRoleSwitcher(false);
-    navigate('/');
-  };
-
-  const demoAccounts = [
-    { role: 'System Administrator', name: 'Dr. Rajesh Kumar', username: 'admin', pass: 'Admin@123', tag: 'HQ Central' },
-    { role: 'PGRC Officer', name: 'Shri Arvind Sharma', username: 'pgrc_officer', pass: 'Pgrc@123', tag: 'PGRC Bureau' },
-    { role: 'Regulation Bureau Off', name: 'Smt. Sunita Verma', username: 'rb_officer', pass: 'Rb@123', tag: 'Regulation' },
-    { role: 'Bureau Head', name: 'Dr. Vikramaditya Rao', username: 'bureau_head', pass: 'Head@123', tag: 'Senior Mgmt' },
-    { role: 'Regional Office Officer', name: 'Er. Manoj Tiwari', username: 'ro_northern', pass: 'Ro@123', tag: 'RO Northern' },
-    { role: 'Competent Authority', name: 'Member Secretary AICTE', username: 'competent_authority', pass: 'Auth@123', tag: 'Executive' },
-    { role: 'Citizen Complainant', name: 'Rahul S. (Student)', username: 'complainant_user', pass: 'Citizen@123', tag: 'Stakeholder' },
-  ];
-
   return (
-    <header className="bg-gov-dark text-white border-b border-slate-700/80 sticky top-0 z-40 shadow-md">
-      {/* Subtle National Tricolor Ribbon at Top Edge */}
-      <div className="tricolor-ribbon" />
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-soft select-none">
+      {/* Refined Gold & Navy Accent Line at Top */}
+      <div className="h-1 bg-gradient-to-r from-[#0B2545] via-[#2563EB] to-[#F59E0B]" />
 
-      {/* Institutional Administrative Utility Bar */}
-      <div className="bg-[#0b1d30] text-slate-300 text-[11px] px-4 sm:px-8 py-1.5 flex items-center justify-between border-b border-slate-800">
-        <div className="flex items-center gap-2 tracking-wide text-slate-400">
-          <span className="font-semibold text-slate-200">भारत सरकार | Government of India</span>
-          <span className="text-slate-600 hidden sm:inline">&bull;</span>
-          <span className="hidden sm:inline text-slate-300">शिक्षा मंत्रालय | Ministry of Education</span>
-          <span className="text-slate-600 hidden md:inline">&bull;</span>
-          <span className="hidden md:inline bg-teal-900/80 text-teal-200 px-2 py-0.5 rounded text-[10px] font-mono border border-teal-500/30">
-            SIH 2026 &bull; PS 26264
+      {/* Main Single Masthead Header */}
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-18 py-2 flex items-center justify-between">
+        {/* Left Side: Mobile Hamburger + Official AICTE Logo + Branding */}
+        <div className="flex items-center gap-3.5">
+          <button
+            onClick={onToggleSidebar}
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu className="w-5 h-5 text-royal-main" />
+          </button>
+
+          <Link to="/" className="flex items-center gap-3 group">
+            <AicteLogo size={46} className="transition-transform group-hover:scale-105" />
+            <div className="border-l border-slate-200 pl-3">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+                All India Council for Technical Education
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#0B2545] leading-tight">
+                  Case360+
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 font-mono">
+                  National Portal
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-medium leading-none hidden sm:block mt-0.5">
+                Ministry of Education &bull; Government of India
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Center: Current Workspace Location Badge */}
+        <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/80">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+            {currentRouteMeta.category}
+          </span>
+          <span className="text-slate-300">&bull;</span>
+          <span className="text-xs font-bold text-slate-800">
+            {currentRouteMeta.title}
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
-            <Clock className="w-3 h-3 text-slate-400" />
-            <span>{currentTime || 'New Delhi, IST'}</span>
-          </div>
-
-          <button
-            onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
-          >
-            <Users className="w-3 h-3 text-teal-400" />
-            <span>Evaluation Role Switcher</span>
-            <ChevronDown className={`w-3 h-3 transition-transform ${showRoleSwitcher ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* Role Switcher Drawer */}
-      {showRoleSwitcher && (
-        <div className="bg-[#0e243a] border-b border-slate-700 px-4 sm:px-8 py-3 shadow-inner">
-          <div className="w-full max-w-[1600px] mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <Shield className="w-3.5 h-3.5 text-teal-400" />
-                Select Role Persona for Prototype Evaluation (PS 26264)
-              </span>
-              <button
-                onClick={() => setShowRoleSwitcher(false)}
-                className="text-xs text-slate-400 hover:text-white"
-              >
-                Close &times;
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
-              {demoAccounts.map((acc) => (
-                <button
-                  key={acc.username}
-                  onClick={() => quickSwitch(acc.username, acc.pass)}
-                  className={`p-2 rounded text-left transition-all border ${
-                    user?.username === acc.username
-                      ? 'bg-gov-primary border-teal-400 text-white shadow'
-                      : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  <div className="text-[11px] font-bold truncate leading-tight">{acc.role}</div>
-                  <div className="text-[10px] text-slate-400 truncate mt-0.5">{acc.name}</div>
-                  <div className="mt-1 flex items-center justify-between text-[9px] font-mono text-slate-400">
-                    <span className="text-teal-400/90">{acc.tag}</span>
-                    {user?.username === acc.username && (
-                      <span className="text-emerald-400 font-bold font-sans">Active</span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Header Masthead */}
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-18 py-2 flex items-center justify-between">
-        {/* Left: Branding & Institutional Identity */}
-        <Link to="/" className="flex items-center gap-3.5 group">
-          <div className="w-11 h-11 rounded-md bg-gradient-to-br from-[#17365D] to-[#102A43] border border-teal-500/40 flex items-center justify-center text-white shadow-sm shrink-0">
-            <Building2 className="w-6 h-6 text-teal-400" />
-          </div>
-          <div>
-            <div className="text-[11px] font-medium text-slate-300 tracking-wide leading-tight">
-              अखिल भारतीय तकनीकी शिक्षा परिषद &bull; AICTE
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-extrabold text-base sm:text-lg tracking-tight text-white leading-none">
-                AICTE Case360+
-              </span>
-              <span className="text-[10px] font-semibold bg-teal-800/80 text-teal-100 px-2 py-0.5 rounded border border-teal-600 font-mono tracking-wider">
-                PS 26264
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 font-normal leading-tight hidden lg:block mt-0.5">
-              Intelligent Cross-Bureau Complaint Monitoring & Coordination
-            </p>
-          </div>
-        </Link>
-
-        {/* Right: Actions, Notifications & Profile */}
-        <div className="flex items-center gap-3">
+        {/* Right Side: Notifications & Officer Profile */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Notifications Center */}
           <div className="relative">
             <button
-              onClick={() => setShowNotifMenu(!showNotifMenu)}
-              className="p-2 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white relative transition-colors border border-transparent hover:border-slate-700 cursor-pointer"
+              onClick={() => {
+                setShowNotifMenu(!showNotifMenu);
+                setShowUserMenu(false);
+              }}
+              className="p-2 rounded-lg hover:bg-blue-50 text-slate-600 hover:text-royal-main relative transition-colors border border-slate-200/80 cursor-pointer"
               title="Notifications"
+              id="notifications-button"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-5 h-5 text-royal-main" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-gov-danger text-white rounded-full text-[10px] font-bold flex items-center justify-center ring-2 ring-gov-dark">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white rounded-full text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
                   {unreadCount}
                 </span>
               )}
@@ -206,23 +151,27 @@ export const Header: React.FC = () => {
 
             {/* Notifications Dropdown */}
             {showNotifMenu && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-gov-text rounded-md shadow-gov-modal border border-gov-border z-50 overflow-hidden animate-fade-in">
-                <div className="px-4 py-3 bg-slate-50 border-b border-gov-border flex items-center justify-between">
-                  <span className="font-bold text-xs text-gov-dark uppercase tracking-wider">
-                    Notifications ({unreadCount} unread)
-                  </span>
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-slate-800 rounded-xl shadow-modal border border-slate-200 z-50 overflow-hidden animate-fade-in">
+                <div className="px-4 py-3 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-royal-navy uppercase tracking-wider">
+                    <Bell className="w-3.5 h-3.5 text-royal-main" />
+                    <span>Regulatory Alerts ({unreadCount} unread)</span>
+                  </div>
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllRead}
-                      className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline cursor-pointer"
+                      className="text-xs text-royal-main hover:text-royal-deep font-semibold hover:underline cursor-pointer"
                     >
                       Mark all as read
                     </button>
                   )}
                 </div>
+
                 <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-slate-400">No active notifications</div>
+                    <div className="p-8 text-center text-xs text-slate-400">
+                      No pending regulatory notifications
+                    </div>
                   ) : (
                     notifications.map((n) => (
                       <div
@@ -233,10 +182,10 @@ export const Header: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span className={`font-semibold ${!n.is_read ? 'text-gov-primary' : 'text-slate-800'}`}>
+                          <span className={`font-semibold ${!n.is_read ? 'text-royal-main' : 'text-slate-800'}`}>
                             {n.title}
                           </span>
-                          {!n.is_read && <span className="w-2 h-2 rounded-full bg-blue-600 mt-1 shrink-0" />}
+                          {!n.is_read && <span className="w-2 h-2 rounded-full bg-royal-main mt-1 shrink-0" />}
                         </div>
                         <p className="text-slate-600 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.message}</p>
                         <span className="text-[10px] text-slate-400 mt-1.5 block font-mono">
@@ -246,61 +195,74 @@ export const Header: React.FC = () => {
                     ))
                   )}
                 </div>
-                <div className="p-2.5 bg-slate-50 border-t border-gov-border text-center">
+
+                <div className="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
                   <Link
-                    to="/deadlines"
+                    to="/cases"
                     onClick={() => setShowNotifMenu(false)}
-                    className="text-xs text-gov-secondary hover:text-gov-primary font-semibold hover:underline"
+                    className="text-xs text-royal-main hover:text-royal-deep font-semibold hover:underline inline-flex items-center gap-1"
                   >
-                    View All Deadlines & Alerts &rarr;
+                    <span>View All Active Regulatory Cases &rarr;</span>
                   </Link>
                 </div>
               </div>
             )}
           </div>
 
-          {/* User Profile */}
+          {/* Officer Profile Badge & Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-md hover:bg-slate-800 text-left transition-colors border border-transparent hover:border-slate-700 cursor-pointer"
+              onClick={() => {
+                setShowUserMenu(!showUserMenu);
+                setShowNotifMenu(false);
+              }}
+              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-lg hover:bg-slate-50 border border-slate-200 text-left transition-all cursor-pointer bg-white"
+              id="user-profile-menu-toggle"
             >
-              <div className="w-8 h-8 rounded-md bg-gradient-to-tr from-gov-secondary to-gov-primary flex items-center justify-center font-bold text-xs text-white border border-slate-600 shadow-sm">
-                {user?.display_name?.charAt(0) || 'U'}
+              {/* Professional Officer Avatar Badge with Gold Accent */}
+              <div className="w-9 h-9 rounded-full bg-[#0B2545] border-2 border-[#F59E0B] text-amber-300 font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+                <UserCheck className="w-4 h-4 text-amber-400" />
               </div>
-              <div className="hidden md:block">
-                <div className="text-xs font-bold text-white leading-tight">{user?.display_name}</div>
-                <div className="text-[10px] text-slate-300 leading-tight">
-                  {user?.roles?.[0]?.name || 'Authorized Official'}
+              <div className="hidden sm:block">
+                <div className="text-xs font-bold text-slate-900 leading-tight">
+                  {user?.display_name || 'Authorized Official'}
+                </div>
+                <div className="text-[10px] text-royal-deep font-medium leading-tight">
+                  {user?.bureau_assignments?.[0]?.bureau?.name || user?.roles?.[0]?.name || 'Central Officer'}
                 </div>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
-            {/* User Dropdown */}
+            {/* Profile Dropdown */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-gov-text rounded-md shadow-gov-modal border border-gov-border z-50 py-1">
-                <div className="px-3.5 py-3 border-b border-slate-100 bg-slate-50">
-                  <p className="text-xs font-bold text-gov-dark">{user?.display_name}</p>
+              <div className="absolute right-0 mt-2 w-72 bg-white text-slate-800 rounded-xl shadow-modal border border-slate-200 z-50 py-1 overflow-hidden animate-fade-in">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+                  <p className="text-xs font-bold text-slate-900">{user?.display_name}</p>
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">{user?.email}</p>
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-gov-primary/10 text-gov-primary font-mono font-semibold border border-gov-primary/20">
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-royal-main font-mono font-semibold border border-blue-200">
                       {user?.roles?.[0]?.code}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-mono">
-                      {user?.bureau_assignments?.[0]?.bureau?.code || 'Central'}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-mono font-semibold border border-amber-200">
+                      {user?.bureau_assignments?.[0]?.bureau?.code || 'Central HQ'}
                     </span>
                   </div>
                 </div>
 
-                <div className="px-2 py-1.5 text-[11px] text-slate-600 border-b border-slate-100 space-y-1">
-                  <div className="flex justify-between px-2 py-0.5">
+                <div className="px-3 py-2 text-[11px] text-slate-600 border-b border-slate-100 space-y-1.5">
+                  <div className="flex justify-between px-1">
                     <span>Account Status:</span>
-                    <span className="font-semibold text-emerald-700 capitalize">{user?.account_status || 'Active'}</span>
+                    <span className="font-semibold text-emerald-600 inline-flex items-center gap-1 capitalize">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {user?.account_status || 'Active'}
+                    </span>
                   </div>
-                  <div className="flex justify-between px-2 py-0.5">
+                  <div className="flex justify-between px-1">
                     <span>Jurisdiction:</span>
-                    <span className="font-semibold text-slate-800">{user?.bureau_assignments?.[0]?.bureau?.name || 'Central Head Office'}</span>
+                    <span className="font-semibold text-slate-800 truncate max-w-[150px]">
+                      {user?.bureau_assignments?.[0]?.bureau?.name || 'Headquarters'}
+                    </span>
                   </div>
                 </div>
 
@@ -309,7 +271,8 @@ export const Header: React.FC = () => {
                     setShowUserMenu(false);
                     logout();
                   }}
-                  className="w-full text-left px-3.5 py-2.5 text-xs text-gov-danger hover:bg-red-50 flex items-center gap-2 font-semibold cursor-pointer transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-semibold cursor-pointer transition-colors"
+                  id="sign-out-button"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Sign Out from Administrative Session
@@ -323,3 +286,4 @@ export const Header: React.FC = () => {
   );
 };
 
+export default Header;

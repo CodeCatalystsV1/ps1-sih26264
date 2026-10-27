@@ -1,6 +1,6 @@
 """
 Unit Tests for Hybrid Relationship Scorer (Phase 3F)
-AICTE Case360+ (SIH 26264)
+AICTE Case360+
 """
 
 import pytest

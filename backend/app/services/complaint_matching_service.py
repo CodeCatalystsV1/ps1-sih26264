@@ -1,6 +1,6 @@
 """
 AICTE Case360+ — Complaint Matching Service
-Phase 3F: Business Service Orchestrating Hybrid ML Relationship Pipeline (SIH 26264)
+Phase 3F: Business Service Orchestrating Hybrid ML Relationship Pipeline
 """
 
 import json

@@ -97,7 +97,7 @@ export const CoordinationWorkspacePage: React.FC = () => {
                 Cross-Bureau Coordination Workspace
               </h1>
               <span className="gov-badge-info font-bold uppercase tracking-wider text-[10px]">
-                SIH PS-264 Flagship
+                Inter-Bureau Alignment
               </span>
             </div>
             <p className="text-xs text-slate-600">
@@ -213,7 +213,7 @@ export const CoordinationWorkspacePage: React.FC = () => {
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-200 text-amber-900 rounded">
-                          STATUTORY ADVISORY &bull; PS-264
+                          STATUTORY ADVISORY &bull; CASE360+
                         </span>
                         <span className="text-xs font-mono font-bold text-amber-950">
                           {selectedOverlap.permanent_id}

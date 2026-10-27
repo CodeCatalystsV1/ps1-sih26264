@@ -1,5 +1,4 @@
-# AICTE ICMS — Architecture & Implementation Plan
-## Problem Statement SIH PS-264: Integrated Institution Complaint Monitoring and Coordination Platform
+## Integrated Institution Complaint Monitoring and Coordination Platform
 
 **Tagline:** *One Institution. One Coordinated View. Better Grievance Resolution.*
 

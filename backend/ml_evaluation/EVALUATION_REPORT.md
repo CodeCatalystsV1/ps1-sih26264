@@ -1,6 +1,6 @@
 # AICTE Case360+ — Phase 3 Machine Learning Evaluation Report
 
-## Problem Statement: Smart India Hackathon — SIH 26264
+## System: AICTE Case360+ National Regulatory Platform
 **Feature:** AI Complaint Relationship Intelligence Engine  
 **Model Architecture:** `intfloat/multilingual-e5-small` + RapidFuzz + Hybrid Deterministic Rules  
 **Date of Evaluation:** October 2026  

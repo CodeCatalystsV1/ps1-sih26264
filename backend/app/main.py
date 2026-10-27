@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AICTE Case360+: Intelligent Cross-Bureau Complaint Monitoring and Regulatory Action Coordination Platform",
-    description="Intelligent Cross-Bureau Complaint Monitoring and Regulatory Action Coordination Platform (AICTE Case360+) — SIH PS 26264",
+    description="Intelligent Cross-Bureau Complaint Monitoring and Regulatory Action Coordination Platform (AICTE Case360+)",
     version="2.0.0",
     lifespan=lifespan
 )

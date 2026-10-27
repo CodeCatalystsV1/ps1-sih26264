@@ -1,5 +1,4 @@
--- AICTE Case360+ — PostgreSQL + pgvector Extension & Schema Setup (Phase 3J)
--- Problem Statement: SIH 26264
+-- Platform: AICTE Case360+ National Regulatory Portal
 -- Vector Model: intfloat/multilingual-e5-small (384 dimensions)
 
 -- 1. Enable pgvector extension
