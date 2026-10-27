@@ -23,7 +23,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (loading) {
     return (
       <div className="min-h-screen bg-gov-bg flex items-center justify-center text-xs text-slate-500 font-medium">
-        Loading AICTE ICMS Administrative Session...
+        Loading AICTE Case360+ Administrative Session...
       </div>
     );
   }

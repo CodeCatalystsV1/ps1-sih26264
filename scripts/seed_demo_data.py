@@ -18,7 +18,7 @@ from backend.app.core.security import get_password_hash
 from backend.app.services.overlap_service import detect_overlaps_for_institution
 
 def seed_database():
-    print("Initializing Database schema...")
+    print("Initializing Database schema for AICTE Case360+ (PS 26264)...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
@@ -158,13 +158,19 @@ def seed_database():
         db.flush()
         print("[OK] SLA Rules seeded.")
 
-        # 7. Seed Fictional Institutions
+        # 7. Seed Fictional Demonstration Institutions (10 Total)
+        # All institutions explicitly labelled as Fictional SIH Demonstration Entities
         institutions_data = [
             ("DEMO-AICTE-001", "Demo Institute A — Technology & Science", "Engineering & Technology", "Knowledge City, Sector 62", "Noida", "Gautam Buddha Nagar", "Uttar Pradesh", "NRO", "Kanpur", "201301", "contact@demo-inst-a.ac.in", "VERIFIED"),
             ("DEMO-AICTE-002", "Demo Institute B — College of Engineering", "Engineering & Technology", "University Road, Shivaji Nagar", "Pune", "Pune", "Maharashtra", "WRO", "Mumbai", "411005", "info@demo-inst-b.edu.in", "VERIFIED"),
             ("DEMO-AICTE-003", "Demo Institute C — Institute of Management & Technology", "Management", "Old Mahabalipuram Road", "Chennai", "Chennai", "Tamil Nadu", "SRO", "Chennai", "600096", "registrar@demo-inst-c.ac.in", "VERIFIED"),
             ("DEMO-AICTE-004", "Demo Institute D — Polytechnic & Technical Studies", "Polytechnic", "Bidhannagar Sector V", "Kolkata", "North 24 Parganas", "West Bengal", "ERO", "Kolkata", "700091", "admin@demo-inst-d.org", "VERIFIED"),
             ("DEMO-AICTE-005", "Demo Institute E — Global College of Pharmacy", "Pharmacy", "Malviya Nagar Extension", "Jaipur", "Jaipur", "Rajasthan", "NRO", "Kanpur", "302017", "pharmacy@demo-inst-e.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-006", "Demo Institute F — Apex Institute of Technology", "Engineering & Technology", "Electronic City Phase 1", "Bengaluru", "Bengaluru Urban", "Karnataka", "SRO", "Chennai", "560100", "principal@demo-inst-f.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-007", "Demo Institute G — National Institute of Applied Sciences", "Applied Sciences", "Gachibowli Tech Zone", "Hyderabad", "Rangareddy", "Telangana", "SRO", "Chennai", "500032", "contact@demo-inst-g.edu.in", "VERIFIED"),
+            ("DEMO-AICTE-008", "Demo Institute H — Metropolitan School of Architecture", "Architecture & Planning", "Vasant Kunj Institutional Area", "New Delhi", "South West Delhi", "Delhi", "NRO", "Kanpur", "110070", "admin@demo-inst-h.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-009", "Demo Institute I — Vidya College of Technical Education", "Polytechnic", "Sitabuldi Main Road", "Nagpur", "Nagpur", "Maharashtra", "WRO", "Mumbai", "440012", "info@demo-inst-i.ac.in", "VERIFIED"),
+            ("DEMO-AICTE-010", "Demo Institute J — Premier Institute of Hotel Management", "Hotel Management", "Salt Lake Sector II", "Kolkata", "Kolkata", "West Bengal", "ERO", "Kolkata", "700064", "office@demo-inst-j.org", "VERIFIED"),
         ]
         insts_map = {}
         for perm_id, name, itype, addr, city, dist, state, r_code, roffice, pin, mail, v_status in institutions_data:
@@ -190,16 +196,16 @@ def seed_database():
                 db.add(inst)
                 db.flush()
             insts_map[perm_id] = inst
-        print("[OK] Fictional Institutions seeded.")
+        print(f"[OK] {len(institutions_data)} Fictional Demonstration Institutions seeded.")
 
-        # 8. SEED SPECIFIC OVERLAP SCENARIO FOR DEMO INSTITUTE A
-        # Prompt Requirement:
-        # Case 1: PGRC case in active status "Under Verification"
-        # Case 2: Regulation Bureau (RB) case in active status "Under Scrutiny"
-        # Associate both with DEMO-AICTE-001. Different handling Bureaus.
+        # =========================================================================
+        # SEED SIH PS 26264 DEMO SCENARIOS
+        # =========================================================================
+
+        # SCENARIO A: Two Related Complaints across PGRC and RB (DEMO-AICTE-001)
+        # Capitation Fee & Roster Deficiencies under separate investigation
         inst_a = insts_map["DEMO-AICTE-001"]
 
-        # Complaint 1 for Inst A
         c1 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0001").first()
         if not c1:
             c1 = Complaint(
@@ -220,7 +226,6 @@ def seed_database():
             db.add(c1)
             db.flush()
 
-        # Case 1 for Inst A (PGRC - Under Verification)
         case1 = db.query(Case).filter(Case.case_reference == "CASE-2026-0001").first()
         if not case1:
             case1 = Case(
@@ -268,7 +273,6 @@ def seed_database():
             )
             db.add(wf1)
 
-        # Complaint 2 for Inst A (Different issue, handled by Regulation Bureau)
         c2 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0002").first()
         if not c2:
             c2 = Complaint(
@@ -289,7 +293,6 @@ def seed_database():
             db.add(c2)
             db.flush()
 
-        # Case 2 for Inst A (Regulation Bureau - Under Scrutiny)
         case2 = db.query(Case).filter(Case.case_reference == "CASE-2026-0002").first()
         if not case2:
             case2 = Case(
@@ -337,8 +340,73 @@ def seed_database():
             )
             db.add(wf2)
 
-        # 9. Additional realistic cases for other demo institutes
-        # Inst B: Overdue case demonstration
+        # SCENARIO B: Two Unrelated Complaints on Same Institution (DEMO-AICTE-006)
+        # One regarding Hostel Wi-Fi (Student Welfare) and one regarding Library books (Infrastructure)
+        inst_f = insts_map["DEMO-AICTE-006"]
+        c3 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0003").first()
+        if not c3:
+            c3 = Complaint(
+                complaint_reference="CMP-2026-0003",
+                title="Hostel Internet Bandwidth and Mess Sanitation Deficiency",
+                description="Hostel residents report frequent disconnection of academic research portals and unhygienic mess dining conditions.",
+                complainant_id=users_map["complainant_user"].id,
+                institution_id=inst_f.id,
+                category_id=cats_map["CAT_STUDENT"].id,
+                complainant_type="STUDENT",
+                source="PORTAL",
+                received_at=now - timedelta(days=5),
+                status="REGISTERED",
+                sensitivity_classification="NORMAL",
+                assigned_bureau_id=bureaus_map["PGRC"].id,
+                created_by=users_map["complainant_user"].id
+            )
+            db.add(c3)
+            db.flush()
+
+        c4 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0004").first()
+        if not c4:
+            c4 = Complaint(
+                complaint_reference="CMP-2026-0004",
+                title="Shortage of Mandatory Digital Library Subscriptions (IEEE/ACM)",
+                description="Faculty grievance asserting lack of required e-journal packages mandated in Appendix 10 of AICTE Approval Handbook.",
+                complainant_id=None,
+                institution_id=inst_f.id,
+                category_id=cats_map["CAT_INFRA"].id,
+                complainant_type="FACULTY",
+                source="EMAIL",
+                received_at=now - timedelta(days=3),
+                status="REGISTERED",
+                sensitivity_classification="NORMAL",
+                assigned_bureau_id=bureaus_map["PGRC"].id,
+                created_by=users_map["admin"].id
+            )
+            db.add(c4)
+            db.flush()
+
+        # SCENARIO C: Cases Involving Distinct Institutions (DEMO-AICTE-007 and DEMO-AICTE-008)
+        inst_g = insts_map["DEMO-AICTE-007"]
+        case_g = db.query(Case).filter(Case.case_reference == "CASE-2026-0007").first()
+        if not case_g:
+            case_g = Case(
+                case_reference="CASE-2026-0007",
+                institution_id=inst_g.id,
+                current_bureau_id=bureaus_map["AB"].id,
+                current_officer_id=users_map["admin"].id,
+                title="Annual Extension of Approval (EoA) Verification: New Specialization Addition",
+                category="Institutional Compliance & Approvals",
+                status="Under Scrutiny",
+                priority="MEDIUM",
+                received_at=now - timedelta(days=14),
+                last_action="Scrutiny committee verifying land-use conversion documents",
+                last_action_at=now - timedelta(days=3),
+                applicable_deadline_at=now + timedelta(days=16),
+                created_by=users_map["admin"].id
+            )
+            db.add(case_g)
+            db.flush()
+
+        # SCENARIO D: A Pending Cross-Bureau Coordination Request (DEMO-AICTE-002)
+        # PGRC case and Regulation Bureau inquiry pending joint committee review
         inst_b = insts_map["DEMO-AICTE-002"]
         case3 = db.query(Case).filter(Case.case_reference == "CASE-2026-0003").first()
         if not case3:
@@ -350,7 +418,7 @@ def seed_database():
                 title="Non-refund of caution deposit to graduated students",
                 category="Student Welfare & Fee Disputes",
                 status="Awaiting Response",
-                priority="MEDIUM",
+                priority="HIGH",
                 received_at=now - timedelta(days=40),
                 last_action="Reminder letter sent to registrar regarding deposit refund",
                 last_action_at=now - timedelta(days=15),
@@ -362,7 +430,28 @@ def seed_database():
             db.add(case3)
             db.flush()
 
-        # Inst C: Disposed Case demonstration
+        case_b_rb = db.query(Case).filter(Case.case_reference == "CASE-2026-0006").first()
+        if not case_b_rb:
+            case_b_rb = Case(
+                case_reference="CASE-2026-0006",
+                institution_id=inst_b.id,
+                current_bureau_id=bureaus_map["RB"].id,
+                current_officer_id=users_map["rb_officer"].id,
+                title="Institutional Governance Audit: Financial Irregularities & Student Accounts",
+                category="Institutional Compliance & Approvals",
+                status="Under Verification",
+                priority="HIGH",
+                received_at=now - timedelta(days=15),
+                last_action="Special inquiry committee recommended cross-bureau review",
+                last_action_at=now - timedelta(days=2),
+                applicable_deadline_at=now + timedelta(days=10),
+                created_by=users_map["rb_officer"].id
+            )
+            db.add(case_b_rb)
+            db.flush()
+
+        # SCENARIO E: Overdue Case Requiring Supervisor Attention (Already present on DEMO-AICTE-002, CASE-2026-0003)
+        # Additional Disposed Case demonstration on DEMO-AICTE-003
         inst_c = insts_map["DEMO-AICTE-003"]
         case4 = db.query(Case).filter(Case.case_reference == "CASE-2026-0004").first()
         if not case4:
@@ -424,14 +513,18 @@ def seed_database():
 
         db.commit()
 
-        # 10. Execute Real Overlap Detection Logic for all institutions
+        # Execute Overlap Detection Engine across all institutions
         print("Executing deterministic cross-bureau overlap detection engine...")
         for inst in db.query(Institution).all():
-            detect_overlaps_for_institution(db, inst.id)
+            flag = detect_overlaps_for_institution(db, inst.id)
+            if flag and inst.permanent_id == "DEMO-AICTE-002":
+                # Mark DEMO-AICTE-002 as COORDINATION_REQUESTED for Scenario D
+                flag.relationship_state = "COORDINATION_REQUESTED"
+                flag.coordination_owner_id = users_map["bureau_head"].id
         db.commit()
 
         print("\n=======================================================")
-        print("[OK] AICTE ICMS Database seeding completed successfully!")
+        print("[OK] AICTE Case360+ Database seeding completed successfully!")
         print("=======================================================")
         print("Fictional Demonstration Accounts:")
         print("1. System Administrator:    admin               / Admin@123")

@@ -98,8 +98,8 @@ export const Header: React.FC = () => {
           <span className="text-slate-600 hidden sm:inline">&bull;</span>
           <span className="hidden sm:inline text-slate-300">शिक्षा मंत्रालय | Ministry of Education</span>
           <span className="text-slate-600 hidden md:inline">&bull;</span>
-          <span className="hidden md:inline bg-gov-primary/80 text-amber-300 px-1.5 py-0.2 rounded text-[10px] font-mono border border-amber-400/20">
-            SIH-2026 PS-264
+          <span className="hidden md:inline bg-teal-900/80 text-teal-200 px-2 py-0.5 rounded text-[10px] font-mono border border-teal-500/30">
+            SIH 2026 &bull; PS 26264
           </span>
         </div>
 
@@ -113,7 +113,7 @@ export const Header: React.FC = () => {
             onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
             className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-medium transition-colors cursor-pointer"
           >
-            <Users className="w-3 h-3 text-amber-400" />
+            <Users className="w-3 h-3 text-teal-400" />
             <span>Evaluation Role Switcher</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${showRoleSwitcher ? 'rotate-180' : ''}`} />
           </button>
@@ -127,7 +127,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
                 <Shield className="w-3.5 h-3.5 text-teal-400" />
-                Select Role Persona for Prototype Evaluation (PS-264)
+                Select Role Persona for Prototype Evaluation (PS 26264)
               </span>
               <button
                 onClick={() => setShowRoleSwitcher(false)}
@@ -143,14 +143,14 @@ export const Header: React.FC = () => {
                   onClick={() => quickSwitch(acc.username, acc.pass)}
                   className={`p-2 rounded text-left transition-all border ${
                     user?.username === acc.username
-                      ? 'bg-gov-primary border-amber-400 text-white shadow'
+                      ? 'bg-gov-primary border-teal-400 text-white shadow'
                       : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
                   }`}
                 >
                   <div className="text-[11px] font-bold truncate leading-tight">{acc.role}</div>
                   <div className="text-[10px] text-slate-400 truncate mt-0.5">{acc.name}</div>
                   <div className="mt-1 flex items-center justify-between text-[9px] font-mono text-slate-400">
-                    <span className="text-amber-400/90">{acc.tag}</span>
+                    <span className="text-teal-400/90">{acc.tag}</span>
                     {user?.username === acc.username && (
                       <span className="text-emerald-400 font-bold font-sans">Active</span>
                     )}
@@ -166,8 +166,8 @@ export const Header: React.FC = () => {
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-18 py-2 flex items-center justify-between">
         {/* Left: Branding & Institutional Identity */}
         <Link to="/" className="flex items-center gap-3.5 group">
-          <div className="w-11 h-11 rounded-md bg-gradient-to-br from-gov-primary to-[#102A43] border border-amber-500/40 flex items-center justify-center text-white shadow-sm shrink-0">
-            <Building2 className="w-6 h-6 text-amber-400" />
+          <div className="w-11 h-11 rounded-md bg-gradient-to-br from-[#17365D] to-[#102A43] border border-teal-500/40 flex items-center justify-center text-white shadow-sm shrink-0">
+            <Building2 className="w-6 h-6 text-teal-400" />
           </div>
           <div>
             <div className="text-[11px] font-medium text-slate-300 tracking-wide leading-tight">
@@ -175,14 +175,14 @@ export const Header: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="font-extrabold text-base sm:text-lg tracking-tight text-white leading-none">
-                AICTE ICMS
+                AICTE Case360+
               </span>
-              <span className="text-[10px] font-semibold bg-gov-secondary/80 text-white px-2 py-0.5 rounded border border-slate-600 font-mono tracking-wider">
-                PORTAL PS-264
+              <span className="text-[10px] font-semibold bg-teal-800/80 text-teal-100 px-2 py-0.5 rounded border border-teal-600 font-mono tracking-wider">
+                PS 26264
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-normal leading-tight hidden lg:block mt-0.5">
-              Integrated Institution Complaint Monitoring and Coordination System
+              Intelligent Cross-Bureau Complaint Monitoring & Coordination
             </p>
           </div>
         </Link>

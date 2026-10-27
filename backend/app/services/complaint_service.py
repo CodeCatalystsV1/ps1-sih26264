@@ -27,15 +27,16 @@ def generate_complaint_reference(db: Session) -> str:
 def generate_case_reference(db: Session) -> str:
     year = datetime.now(timezone.utc).year
     prefix = f"CASE-{year}-"
-    last_case = db.query(Case).filter(Case.case_reference.like(f"{prefix}%")).order_by(Case.id.desc()).first()
-    if last_case:
+    all_cases = db.query(Case.case_reference).filter(Case.case_reference.like(f"{prefix}%")).all()
+    max_seq = 0
+    for (ref,) in all_cases:
         try:
-            last_seq = int(last_case.case_reference.split("-")[-1])
-            next_seq = last_seq + 1
+            seq = int(ref.split("-")[-1])
+            if seq > max_seq:
+                max_seq = seq
         except Exception:
-            next_seq = last_case.id + 1
-    else:
-        next_seq = 1
+            continue
+    next_seq = max_seq + 1
     return f"{prefix}{next_seq:04d}"
 
 def create_complaint(

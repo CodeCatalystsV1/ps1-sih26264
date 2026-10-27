@@ -33,9 +33,9 @@ async def lifespan(app: FastAPI):
     stop_scheduler()
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="Integrated Institution Complaint Monitoring and Coordination Platform (AICTE ICMS) — SIH PS-264",
-    version="1.0.0",
+    title="AICTE Case360+: Intelligent Cross-Bureau Complaint Monitoring and Regulatory Action Coordination Platform",
+    description="Intelligent Cross-Bureau Complaint Monitoring and Regulatory Action Coordination Platform (AICTE Case360+) — SIH PS 26264",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -64,7 +64,7 @@ app.include_router(admin_router, prefix=settings.API_V1_STR)
 def health_check():
     return {
         "status": "healthy",
-        "service": "AICTE ICMS Backend API",
-        "version": "1.0.0",
+        "service": "AICTE Case360+ Backend API",
+        "version": "2.0.0",
         "tagline": settings.TAGLINE
     }

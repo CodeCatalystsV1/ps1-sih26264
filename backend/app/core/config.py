@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings
 from typing import Optional
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AICTE Integrated Institution Complaint Monitoring and Coordination Platform"
-    TAGLINE: str = "One Institution. One Coordinated View. Better Grievance Resolution."
+    PROJECT_NAME: str = "AICTE Case360+: Intelligent Cross-Bureau Complaint Monitoring & Coordination"
+    TAGLINE: str = "One Institution. One Coordinated View. Better Grievance Resolution & Conflict Prevention."
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = "development"
     SECRET_KEY: str = "aicte_icms_dev_secret_key_change_in_production_min_32_chars_2026"

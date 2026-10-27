@@ -1,25 +1,27 @@
-# AICTE Integrated Institution Complaint Monitoring and Coordination Platform (AICTE ICMS)
-## Smart India Hackathon — Problem Statement PS-264
-**Tagline:** *One Institution. One Coordinated View. Better Grievance Resolution.*
+# AICTE Case360+: Intelligent Cross-Bureau Complaint Monitoring & Coordination Platform
+## Smart India Hackathon — Problem Statement PS 26264
+**Tagline:** *One Institution. One Coordinated View. Better Grievance Resolution & Conflict Prevention.*
 
 > [!IMPORTANT]
-> **Prototype Disclaimer:** This software is a functional prototype engineered for the Smart India Hackathon (Problem Statement PS-264). It features an authentic government administrative design system, but is not officially deployed, operated, or endorsed by the All India Council for Technical Education (AICTE). All demonstration institution records, case numbers, and staff names are fictional and intended solely for technical evaluation.
+> **Prototype Disclaimer:** This software is a functional prototype engineered for the Smart India Hackathon (Problem Statement PS 26264). It features an authentic government administrative design system, but is not officially deployed, operated, or endorsed by the All India Council for Technical Education (AICTE). All demonstration institution records, case numbers, and staff names are fictional and intended solely for technical evaluation.
+>
+> **Derivative Development & Attribution Statement:** AICTE Case360+ builds upon the open architectural foundations of the initial AICTE-ICMS prototype (origin: `maxharish12/AICTE-ICMS`). In accordance with open collaboration guidelines and legal licensing attribution, all base author credits, commit histories, and structural foundations are preserved intact, while new modules (Intelligent Action Conflict Guard, Semantic Complaint Matching, and Automated n8n Coordination) represent Phase 1–4 extensions for SIH PS 26264.
 
 ---
 
-## 1. Problem Statement Context (SIH PS-264)
+## 1. Problem Statement Context (SIH PS 26264)
 
 The All India Council for Technical Education (AICTE) receives grievances and regulatory complaints regarding technical education institutions across India from students, faculty members, institutional staff, and external stakeholders.
 
 Historically, multiple autonomous administrative Bureaus and Cells—such as the **Public Grievance Redressal Cell (PGRC)** and the **Regulation Bureau (RB)**—have received and processed complaints independently. This siloed operation has led to critical administrative bottlenecks:
 - **Duplicate Administrative Efforts:** Multiple officers simultaneously investigating identical or related grievances without mutual awareness.
-- **Overlapping and Conflicting Actions:** Conflicting inquiry notices or directives dispatched to the same institution by different AICTE bureaus.
+- **Overlapping and Conflicting Actions:** Conflicting inquiry notices or duplicate inspection directives dispatched to the same institution by different AICTE bureaus.
 - **Delayed Resolution:** Substantial lag in resolving cases due to uncoordinated inquiries and redundant fact-finding.
 - **Poor Bureau Visibility:** Inability of case officers in one bureau to ascertain if an institution is already under investigation elsewhere.
 - **Inability to Track Complete Institutional History:** Scattered case files prevent a single consolidated view of an institution's historical regulatory compliance and grievance record.
 - **Uncoordinated Transfers:** Case transfers between cells lack end-to-end historical traceability and accountability.
 
-**AICTE ICMS** resolves these challenges by introducing a centralized, institution-oriented coordination system. An authorized officer can instantly view an institution's consolidated record, active inquiries, involved bureaus, recent orders, and potential cross-bureau overlaps—without merging distinct citizen grievances or circumventing human administrative discretion.
+**AICTE Case360+** resolves these challenges by introducing a centralized, institution-oriented coordination system. An authorized officer can instantly view an institution's consolidated record, active inquiries, involved bureaus, recent orders, and potential cross-bureau overlaps—without merging distinct citizen grievances or circumventing human administrative discretion.
 
 ---
 

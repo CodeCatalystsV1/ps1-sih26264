@@ -5,27 +5,23 @@ import {
   DashboardMetrics,
   StatusDistribution,
   BureauWorkload,
-  AgeingBand,
   OverlapFlag,
   Case,
   WorkflowHistory,
 } from '../types';
 import {
-  FileText,
-  Clock,
-  RotateCw,
-  CheckCircle2,
-  ArrowRightLeft,
-  AlertTriangle,
+  Building2,
+  Briefcase,
   GitCompare,
-  Building,
-  RefreshCw,
+  AlertTriangle,
+  RotateCw,
+  Clock,
+  ArrowRight,
   ExternalLink,
-  ShieldAlert,
   ChevronRight,
-  TrendingUp,
   Shield,
   Layers,
+  Activity,
 } from 'lucide-react';
 import {
   BarChart,
@@ -36,7 +32,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  Legend,
 } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
@@ -44,7 +39,6 @@ export const DashboardPage: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [statusDist, setStatusDist] = useState<StatusDistribution[]>([]);
   const [bureauWorkloads, setBureauWorkloads] = useState<BureauWorkload[]>([]);
-  const [ageingBands, setAgeingBands] = useState<AgeingBand[]>([]);
   const [overlaps, setOverlaps] = useState<OverlapFlag[]>([]);
   const [overdueCases, setOverdueCases] = useState<Case[]>([]);
   const [recentActivities, setRecentActivities] = useState<WorkflowHistory[]>([]);
@@ -53,20 +47,18 @@ export const DashboardPage: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [m, s, b, a, o, c, r] = await Promise.all([
+      const [m, s, b, o, c, r] = await Promise.all([
         apiRequest<DashboardMetrics>('/reports/dashboard'),
         apiRequest<StatusDistribution[]>('/reports/status-distribution'),
         apiRequest<BureauWorkload[]>('/reports/bureau-workload'),
-        apiRequest<AgeingBand[]>('/reports/ageing'),
-        apiRequest<OverlapFlag[]>('/overlaps?state=POTENTIAL_OVERLAP'),
-        apiRequest<Case[]>('/cases?is_overdue=true&limit=5'),
-        apiRequest<WorkflowHistory[]>('/reports/recent-activity?limit=6'),
+        apiRequest<OverlapFlag[]>('/overlaps'),
+        apiRequest<Case[]>('/cases?is_overdue=true&limit=6'),
+        apiRequest<WorkflowHistory[]>('/reports/recent-activity?limit=7'),
       ]);
 
       setMetrics(m);
       setStatusDist(s);
       setBureauWorkloads(b);
-      setAgeingBands(a);
       setOverlaps(o);
       setOverdueCases(c);
       setRecentActivities(r);
@@ -81,460 +73,459 @@ export const DashboardPage: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const metricCards = [
+  // Section A: 6 Executive Overview Indicators using real backend API metrics
+  const activeCasesCount = (metrics?.pending_cases ?? 0) + (metrics?.cases_under_process ?? 0);
+  const pendingCoordinationCount = overlaps.filter(
+    (o) => o.relationship_state === 'POTENTIAL_OVERLAP' || o.relationship_state === 'COORDINATION_REQUESTED'
+  ).length;
+
+  const executiveKpis = [
     {
-      title: 'Total Complaints',
-      value: metrics?.total_complaints ?? 0,
-      icon: FileText,
-      subtitle: 'All grievances received & cataloged',
-      link: '/complaints',
-      accentColor: 'text-[#17365D]',
-      bgColor: 'bg-blue-50/50',
+      title: 'Total Institutions',
+      value: metrics?.institutions_with_active_cases ?? 0,
+      icon: Building2,
+      subtitle: `${metrics?.institutions_with_active_cases ?? 0} with active regulatory dockets`,
+      link: '/institutions',
+      badgeColor: 'text-[#17365D]',
+      bgColor: 'bg-blue-50/70',
+      borderColor: 'border-blue-200/80',
     },
     {
-      title: 'Pending In Scrutiny',
-      value: metrics?.pending_cases ?? 0,
-      icon: Clock,
-      subtitle: 'Awaiting officer scrutiny & assignment',
-      link: '/cases?status=Received',
-      accentColor: 'text-[#B7791F]',
-      bgColor: 'bg-amber-50/50',
-    },
-    {
-      title: 'Cases Under Process',
-      value: metrics?.cases_under_process ?? 0,
-      icon: RotateCw,
-      subtitle: 'Active inquiry & notice verification',
-      link: '/cases?status=Under%20Verification',
-      accentColor: 'text-[#245A81]',
-      bgColor: 'bg-sky-50/50',
-    },
-    {
-      title: 'Disposed / Resolved',
-      value: metrics?.disposed_cases ?? 0,
-      icon: CheckCircle2,
-      subtitle: 'Final statutory orders passed',
-      link: '/cases?status=Disposed',
-      accentColor: 'text-[#218653]',
-      bgColor: 'bg-emerald-50/50',
-    },
-    {
-      title: 'Inter-Bureau Transfers',
-      value: metrics?.transferred_cases ?? 0,
-      icon: ArrowRightLeft,
-      subtitle: 'Jurisdiction reassignments executed',
-      link: '/cases?status=Transferred',
-      accentColor: 'text-[#168C8C]',
-      bgColor: 'bg-teal-50/50',
-    },
-    {
-      title: 'Overdue SLA Cases',
-      value: metrics?.overdue_cases ?? 0,
-      icon: AlertTriangle,
-      subtitle: 'Breached configured statutory SLA',
-      link: '/deadlines',
-      accentColor: 'text-[#C0392B]',
-      bgColor: 'bg-rose-50/50',
-      isCritical: (metrics?.overdue_cases ?? 0) > 0,
+      title: 'Active Cases',
+      value: activeCasesCount,
+      icon: Briefcase,
+      subtitle: `${metrics?.cases_under_process ?? 0} in formal inquiry / verification`,
+      link: '/cases',
+      badgeColor: 'text-indigo-800',
+      bgColor: 'bg-indigo-50/70',
+      borderColor: 'border-indigo-200/80',
     },
     {
       title: 'Potential Overlaps',
       value: metrics?.potential_overlaps ?? 0,
       icon: GitCompare,
-      subtitle: 'Parallel active bureau proceedings',
+      subtitle: 'Simultaneous cross-bureau inquiries',
       link: '/coordination',
-      accentColor: 'text-[#C0392B]',
-      bgColor: 'bg-red-50/50',
-      isCritical: (metrics?.potential_overlaps ?? 0) > 0,
+      badgeColor: 'text-red-700',
+      bgColor: 'bg-red-50/80',
+      borderColor: 'border-red-300',
     },
     {
-      title: 'Active Institutions',
-      value: metrics?.institutions_with_active_cases ?? 0,
-      icon: Building,
-      subtitle: 'Approved institutes under current inquiry',
-      link: '/institutions',
-      accentColor: 'text-slate-700',
-      bgColor: 'bg-slate-50',
+      title: 'Pending Coordination',
+      value: pendingCoordinationCount,
+      icon: RotateCw,
+      subtitle: 'Awaiting joint review & alignment',
+      link: '/coordination',
+      badgeColor: 'text-amber-800',
+      bgColor: 'bg-amber-50/80',
+      borderColor: 'border-amber-300',
+    },
+    {
+      title: 'Overdue Cases',
+      value: metrics?.overdue_cases ?? 0,
+      icon: AlertTriangle,
+      subtitle: 'Exceeded statutory disposal SLA',
+      link: '/deadlines',
+      badgeColor: 'text-rose-800',
+      bgColor: 'bg-rose-50/80',
+      borderColor: 'border-rose-300',
+    },
+    {
+      title: 'Cases Requiring Attention',
+      value: (metrics?.overdue_cases ?? 0) + (metrics?.potential_overlaps ?? 0),
+      icon: Clock,
+      subtitle: 'Overdue items + pending overlaps',
+      link: '/deadlines',
+      badgeColor: 'text-teal-900',
+      bgColor: 'bg-teal-50/80',
+      borderColor: 'border-teal-300',
     },
   ];
 
-  const STATUS_COLORS: Record<string, string> = {
-    Received: '#64748B',
-    Acknowledged: '#2874A6',
-    'Under Scrutiny': '#17365D',
-    Assigned: '#245A81',
-    'Institution Notice Issued': '#B7791F',
-    'Awaiting Response': '#D97706',
-    'Under Verification': '#168C8C',
-    'Committee Review': '#5B21B6',
-    'Action Taken': '#218653',
-    Disposed: '#15803D',
-    Transferred: '#0284C7',
-    Escalated: '#C0392B',
+  // Colors for Recharts Bureau workload
+  const bureauColors: Record<string, string> = {
+    PGRC: '#17365D',
+    RB: '#0D9488',
+    AB: '#B45309',
+    FB: '#4338CA',
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Header Banner */}
-      <div className="gov-card p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-                AICTE ICMS EXECUTIVE PORTAL
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gov-dark mt-1">
-              Executive Grievance Monitoring & Coordination
-            </h1>
-            <p className="text-xs text-gov-muted mt-1 max-w-3xl">
-              Centralized administrative visibility into institution grievances, bureau workloads, statutory SLA compliance, and cross-bureau overlap detection across all AICTE regional jurisdictions.
-            </p>
+      {/* Page Header */}
+      <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded border border-teal-200 font-mono uppercase tracking-wider">
+              AICTE Case360+ Executive Portal &bull; SIH PS 26264
+            </span>
           </div>
-
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              onClick={fetchDashboardData}
-              disabled={loading}
-              className="gov-btn gov-btn-secondary"
-              title="Refresh all metrics from the database"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh Metrics</span>
-            </button>
-            <Link
-              to="/complaints/new"
-              className="gov-btn gov-btn-primary"
-            >
-              <span>+ Register New Grievance</span>
-            </Link>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1.5 tracking-tight">
+            Institutional Complaint Monitoring & Multi-Bureau Coordination
+          </h1>
+          <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">
+            Centralized institution-centric view across Public Grievance Redressal Cell (PGRC), Regulation Bureau (RB), and Regional Offices. Proactively detects cross-bureau inquiry overlaps, flags SLA deadlines, and facilitates coordinated administrative actions.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={fetchDashboardData}
+            disabled={loading}
+            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-teal-600' : ''}`} />
+            <span>Refresh Live Data</span>
+          </button>
+          <Link
+            to="/coordination"
+            className="px-3.5 py-2 bg-[#102A43] hover:bg-[#17365D] text-white text-xs font-semibold rounded-md shadow-xs flex items-center gap-1.5 transition-colors"
+          >
+            <GitCompare className="w-3.5 h-3.5 text-teal-400" />
+            <span>Coordination Hub</span>
+          </Link>
         </div>
       </div>
 
-      {/* MANDATORY SIH PS-264 STATUTORY OVERLAP ADVISORY BANNER */}
-      {metrics && metrics.potential_overlaps > 0 && (
-        <div className="bg-red-50/90 border border-red-300 rounded-md p-4.5 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-md bg-red-700 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                <ShieldAlert className="w-5 h-5 text-amber-300" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-xs uppercase tracking-wider text-red-900 font-mono">
-                    STATUTORY ADVISORY &bull; PS-264
-                  </span>
-                  <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-red-700 text-white">
-                    {metrics.potential_overlaps} Overlap Detected
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-red-950 mt-1">
-                  Potential Inter-Bureau Overlapping Cases Requiring Formal Coordination
-                </h3>
-                <p className="text-xs text-red-800 mt-1 leading-relaxed max-w-4xl">
-                  The deterministic overlap engine detected multiple active cases being processed independently across different Bureaus (such as PGRC and Regulation Bureau) for the same approved institution. Action is required to avoid duplicated inquiries and conflicting statutory directives.
-                </p>
-                {overlaps.length > 0 && (
-                  <div className="mt-2.5 flex items-center gap-2 text-xs text-red-900 flex-wrap">
-                    <span className="font-semibold text-slate-700">Flagged Institution:</span>
-                    <span className="font-bold underline text-red-900">{overlaps[0].institution_name}</span>
-                    <span className="font-mono text-[11px] text-slate-600">({overlaps[0].permanent_id})</span>
-                    <span className="text-slate-400">&bull;</span>
-                    <span className="text-slate-700">Involved Bureaus:</span>
-                    <span className="font-semibold text-red-900">{overlaps[0].involved_bureaus.join(', ')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <Link
-              to="/coordination"
-              className="gov-btn gov-btn-danger shrink-0 whitespace-nowrap self-start md:self-center"
-            >
-              <span>Open Coordination Workspace</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+      {/* SECTION A — Executive Overview (6 Real Backend Metric Cards) */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#17365D]" />
+            Section A: Executive Overview & Key Administrative Indicators
+          </h2>
+          <span className="text-[11px] text-slate-500 font-mono">Real database aggregations</span>
         </div>
-      )}
-
-      {/* 8 Primary Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {metricCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <Link
-              key={idx}
-              to={card.link}
-              className={`gov-card p-4 hover:border-gov-primary/50 transition-all group flex flex-col justify-between ${
-                card.isCritical ? 'border-red-300 bg-red-50/20' : ''
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between text-slate-500">
-                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    {card.title}
-                  </span>
-                  <div className={`p-1.5 rounded-md ${card.bgColor} ${card.accentColor}`}>
-                    <Icon className="w-4 h-4" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          {executiveKpis.map((kpi, idx) => {
+            const Icon = kpi.icon;
+            return (
+              <Link
+                key={idx}
+                to={kpi.link}
+                className={`p-4 rounded-lg border ${kpi.borderColor} ${kpi.bgColor} hover:shadow-md transition-all group flex flex-col justify-between`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-bold text-slate-700 truncate">{kpi.title}</span>
+                    <Icon className={`w-4 h-4 ${kpi.badgeColor} shrink-0`} />
+                  </div>
+                  <div className={`text-2xl font-extrabold ${kpi.badgeColor} tracking-tight`}>
+                    {loading ? '...' : kpi.value}
                   </div>
                 </div>
-
-                <div className="mt-3 flex items-baseline justify-between">
-                  <span className="text-2xl font-bold tracking-tight text-gov-dark font-mono">
-                    {card.value}
-                  </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-gov-primary transition-colors" />
+                <div className="mt-2 pt-2 border-t border-slate-200/60 text-[10px] text-slate-600 flex items-center justify-between">
+                  <span className="truncate pr-1">{kpi.subtitle}</span>
+                  <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
-              </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
-              <p className="text-[11px] text-slate-500 mt-2.5 pt-2 border-t border-slate-100 leading-tight">
-                {card.subtitle}
+      {/* SECTION B — Cross-Bureau Intelligence Table */}
+      <section className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GitCompare className="w-4 h-4 text-red-600" />
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Section B: Cross-Bureau Intelligence — Active & Potential Overlaps
+              </h2>
+              <p className="text-[11px] text-slate-500">
+                AICTE Permanent ID verification detects simultaneous active cases across differing Bureaus
               </p>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Visual Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Case Status Lifecycle */}
-        <div className="gov-card flex flex-col">
-          <div className="gov-card-header">
-            <span className="font-bold text-gov-dark uppercase tracking-wider text-[11px]">
-              Case Status Lifecycle Distribution
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">Real-time</span>
-          </div>
-          <div className="p-4 flex-1 flex flex-col justify-between">
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={statusDist} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E9EFF5" />
-                  <XAxis
-                    dataKey="status"
-                    interval={0}
-                    angle={-30}
-                    textAnchor="end"
-                    tick={{ fontSize: 9, fill: '#475569' }}
-                  />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#102A43',
-                      borderColor: '#17365D',
-                      color: '#FFFFFF',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  />
-                  <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-                    {statusDist.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || '#17365D'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="text-[11px] text-slate-500 text-center border-t border-slate-100 pt-2 mt-2">
-              Distribution across active grievance workflow stages
             </div>
           </div>
+          <Link
+            to="/coordination"
+            className="text-xs font-semibold text-[#17365D] hover:underline flex items-center gap-1"
+          >
+            Open Full Workspace <ExternalLink className="w-3 h-3" />
+          </Link>
         </div>
 
-        {/* Chart 2: Bureau Workload */}
-        <div className="gov-card flex flex-col">
-          <div className="gov-card-header">
-            <span className="font-bold text-gov-dark uppercase tracking-wider text-[11px]">
-              Workload by Bureau / Operating Cell
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">Assigned vs Overdue</span>
-          </div>
-          <div className="p-4 flex-1 flex flex-col justify-between">
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={bureauWorkloads} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E9EFF5" />
-                  <XAxis dataKey="bureau_code" tick={{ fontSize: 10, fill: '#475569' }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#102A43',
-                      borderColor: '#17365D',
-                      color: '#FFFFFF',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  />
-                  <Bar dataKey="total_assigned" fill="#17365D" name="Assigned Cases" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="overdue_count" fill="#C0392B" name="Overdue" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex items-center justify-center gap-4 text-[11px] text-slate-600 border-t border-slate-100 pt-2 mt-2">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#17365D]"></span> Active Assigned
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#C0392B]"></span> Overdue SLA
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart 3: Pending Case Ageing */}
-        <div className="gov-card flex flex-col">
-          <div className="gov-card-header">
-            <span className="font-bold text-gov-dark uppercase tracking-wider text-[11px]">
-              Pending Case Ageing Analysis
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">Age in Days</span>
-          </div>
-          <div className="p-4 flex-1 flex flex-col justify-between">
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageingBands} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E9EFF5" />
-                  <XAxis dataKey="band" tick={{ fontSize: 10, fill: '#475569' }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#102A43',
-                      borderColor: '#17365D',
-                      color: '#FFFFFF',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  />
-                  <Bar dataKey="count" fill="#168C8C" name="Cases" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="text-[11px] text-slate-500 text-center border-t border-slate-100 pt-2 mt-2">
-              Case duration distribution from initial receipt
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Actionable Administrative Tables Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Table 1: Overdue Cases Requiring Attention */}
-        <div className="gov-table-container flex flex-col">
-          <div className="gov-card-header">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-gov-danger" />
-              <span className="font-bold text-gov-dark uppercase tracking-wider text-[11px]">
-                Overdue Cases Requiring Immediate Escalation ({overdueCases.length})
-              </span>
-            </div>
-            <Link to="/deadlines" className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline">
-              View All Deadlines &rarr;
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left text-xs">
-              <thead className="gov-table-header">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-xs">
+            <thead className="bg-slate-50 text-slate-700 font-bold">
+              <tr>
+                <th className="py-2.5 px-4 text-left">Institution Name</th>
+                <th className="py-2.5 px-4 text-left">AICTE Permanent ID</th>
+                <th className="py-2.5 px-4 text-left">Involved Bureaus</th>
+                <th className="py-2.5 px-4 text-center">Active Cases</th>
+                <th className="py-2.5 px-4 text-left">Overlap Status</th>
+                <th className="py-2.5 px-4 text-left">Assigned Reviewer</th>
+                <th className="py-2.5 px-4 text-right">Review Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-800">
+              {overlaps.length === 0 ? (
                 <tr>
-                  <th className="py-2.5 px-3">Case Ref</th>
-                  <th className="py-2.5 px-3">Institution Name</th>
-                  <th className="py-2.5 px-3">Bureau</th>
-                  <th className="py-2.5 px-3">SLA Status</th>
-                  <th className="py-2.5 px-3 text-right">Action</th>
+                  <td colSpan={7} className="text-center py-6 text-slate-500">
+                    No active cross-bureau overlaps currently detected.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {overdueCases.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-400">
-                      No overdue cases at present
-                    </td>
-                  </tr>
-                ) : (
-                  overdueCases.map((c) => (
-                    <tr key={c.id} className="gov-table-row">
-                      <td className="py-2.5 px-3 font-mono font-bold text-gov-primary whitespace-nowrap">
-                        {c.case_reference}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-800 font-medium">
-                        <div className="truncate max-w-[200px]" title={c.institution_name}>
-                          {c.institution_name}
-                        </div>
-                        <span className="text-[10px] font-mono text-slate-400">{c.permanent_id}</span>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 font-mono font-semibold text-slate-700 border border-slate-200">
-                          {c.current_bureau_code}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className="gov-badge gov-badge-danger">
-                          Overdue
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
+              ) : (
+                overlaps.map((flag) => {
+                  const caseCount = flag.involved_cases?.length ?? 2;
+                  return (
+                    <tr key={flag.id} className="hover:bg-blue-50/40 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-slate-900">
                         <Link
-                          to={`/cases/${c.id}`}
-                          className="text-xs text-gov-primary hover:underline font-semibold"
+                          to={`/institutions/${flag.institution_id}`}
+                          className="hover:text-[#17365D] hover:underline"
                         >
-                          Review &rarr;
+                          {flag.institution_name || `Institution #${flag.institution_id}`}
+                        </Link>
+                        <div className="text-[10px] text-slate-500 font-normal">
+                          {flag.institution_state} &bull; {flag.institution_region}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-700">
+                        {flag.permanent_id || 'N/A'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {flag.involved_bureaus && flag.involved_bureaus.length > 0 ? (
+                            flag.involved_bureaus.map((bName: string, bi: number) => (
+                              <span
+                                key={bi}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300"
+                              >
+                                {bName}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                              PGRC + Regulation Bureau
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800">
+                          {caseCount}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                            flag.relationship_state === 'POTENTIAL_OVERLAP'
+                              ? 'bg-red-50 text-red-800 border border-red-200'
+                              : flag.relationship_state === 'CONFIRMED_RELATED'
+                              ? 'bg-purple-50 text-purple-800 border border-purple-200'
+                              : flag.relationship_state === 'COORDINATION_REQUESTED'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          }`}
+                        >
+                          {flag.relationship_state.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-600">
+                        {flag.reviewed_by_name || flag.coordination_owner_name || (
+                          <span className="text-slate-400 italic">Unassigned (HQ Pool)</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link
+                          to="/coordination"
+                          className="px-2.5 py-1 text-[11px] font-semibold text-white bg-[#102A43] hover:bg-[#17365D] rounded transition-colors inline-flex items-center gap-1 shadow-2xs"
+                        >
+                          Coordinate <ArrowRight className="w-3 h-3 text-teal-400" />
                         </Link>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
+      </section>
 
-        {/* Table 2: Recent Official Workflow Activity Log */}
-        <div className="gov-table-container flex flex-col">
-          <div className="gov-card-header">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-gov-primary" />
-              <span className="font-bold text-gov-dark uppercase tracking-wider text-[11px]">
-                Recent Official Workflow Actions
-              </span>
+      {/* SECTION C & SECTION D: Visualizations Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* SECTION C — Bureau Workload */}
+        <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Briefcase className="w-4 h-4 text-teal-700" />
+                Section C: Bureau Workload & Pending Docket Distribution
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Comparison of active inquiry load across AICTE administrative bureaus
+              </p>
             </div>
-            <Link to="/audit" className="text-xs text-gov-primary hover:text-gov-secondary font-semibold hover:underline">
-              View Audit Logs &rarr;
+            <Link to="/cases" className="text-xs font-semibold text-[#17365D] hover:underline">
+              View All Cases &rarr;
             </Link>
           </div>
 
-          <div className="p-3 divide-y divide-slate-100 max-h-80 overflow-y-auto text-xs">
-            {recentActivities.length === 0 ? (
-              <div className="text-center text-slate-400 py-8">No recent workflow activity recorded</div>
-            ) : (
-              recentActivities.map((act) => (
-                <div key={act.id} className="py-2.5 flex items-start justify-between gap-3 hover:bg-slate-50/60 px-1 rounded transition-colors">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-slate-900 capitalize text-xs">
-                        {act.action_type.toLowerCase().replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 text-[11px] mt-0.5 line-clamp-1 leading-relaxed">
-                      {act.remarks || 'Standard workflow transition recorded'}
-                    </p>
-                    <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5">
-                      <span>Action by:</span>
-                      <span className="font-medium text-slate-700">{act.performed_by_name || 'Authorized Official'}</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap shrink-0 mt-0.5">
-                    {new Date(act.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              ))
-            )}
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={bureauWorkloads} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="bureau_code"
+                  tick={{ fontSize: 11, fill: '#475569' }}
+                  tickLine={false}
+                />
+                <YAxis tick={{ fontSize: 11, fill: '#475569' }} tickLine={false} />
+                <Tooltip
+                  formatter={(val: any) => [`${val} Cases`, 'Workload']}
+                  contentStyle={{
+                    backgroundColor: '#1E293B',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontSize: '11px',
+                    border: 'none',
+                  }}
+                />
+                <Bar dataKey="total_assigned" name="Assigned Cases" radius={[4, 4, 0, 0]}>
+                  {bureauWorkloads.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={bureauColors[entry.bureau_code] || '#17365D'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
+            {bureauWorkloads.map((b) => (
+              <div key={b.bureau_id} className="p-2 bg-slate-50 rounded border border-slate-200">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">{b.bureau_code}</div>
+                <div className="text-sm font-extrabold text-slate-900 mt-0.5">{b.total_assigned} Total</div>
+                <div className="text-[9px] text-slate-500">{b.pending_count} Pending</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION D — Case Status Monitoring */}
+        <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-[#17365D]" />
+                Section D: Case Status Monitoring & Lifecycle Progression
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Official grievance dockets distributed by regulatory processing stage
+              </p>
+            </div>
+            <Link to="/reports" className="text-xs font-semibold text-[#17365D] hover:underline">
+              Detailed Analytics &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-3 bg-blue-50/80 rounded-md border border-blue-200">
+              <div className="text-[10px] font-bold uppercase text-blue-900">New Intake / Received</div>
+              <div className="text-xl font-extrabold text-blue-950 mt-1">
+                {statusDist.find((s) => s.status === 'Received')?.count ?? 0}
+              </div>
+              <div className="text-[10px] text-blue-700 mt-0.5">Initial registration & scrutiny</div>
+            </div>
+            <div className="p-3 bg-teal-50/80 rounded-md border border-teal-200">
+              <div className="text-[10px] font-bold uppercase text-teal-900">Under Investigation / Verification</div>
+              <div className="text-xl font-extrabold text-teal-950 mt-1">
+                {(statusDist.find((s) => s.status === 'Under Verification')?.count ?? 0) +
+                  (statusDist.find((s) => s.status === 'Under Scrutiny')?.count ?? 0)}
+              </div>
+              <div className="text-[10px] text-teal-700 mt-0.5">Institution response verification</div>
+            </div>
+            <div className="p-3 bg-amber-50/80 rounded-md border border-amber-200">
+              <div className="text-[10px] font-bold uppercase text-amber-900">Pending Coordination</div>
+              <div className="text-xl font-extrabold text-amber-950 mt-1">
+                {pendingCoordinationCount}
+              </div>
+              <div className="text-[10px] text-amber-700 mt-0.5">Cross-bureau committee review</div>
+            </div>
+            <div className="p-3 bg-emerald-50/80 rounded-md border border-emerald-200">
+              <div className="text-[10px] font-bold uppercase text-emerald-900">Disposed / Resolved</div>
+              <div className="text-xl font-extrabold text-emerald-950 mt-1">
+                {metrics?.disposed_cases ?? 0}
+              </div>
+              <div className="text-[10px] text-emerald-700 mt-0.5">Action taken / closure orders</div>
+            </div>
+          </div>
+
+          {/* Overdue statutory cases quick alert */}
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-md flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
+              <div>
+                <span className="text-xs font-bold text-rose-900">
+                  {metrics?.overdue_cases ?? 0} Cases Currently Overdue Past Configured SLA
+                </span>
+                <p className="text-[10px] text-rose-700">Immediate supervisor intervention recommended</p>
+              </div>
+            </div>
+            <Link
+              to="/deadlines"
+              className="px-2.5 py-1 text-[11px] font-semibold text-rose-900 bg-rose-100 hover:bg-rose-200 rounded transition-colors"
+            >
+              Inspect &rarr;
+            </Link>
+          </div>
+        </section>
       </div>
+
+      {/* SECTION E — Recent Workflow Activity */}
+      <section className="bg-white rounded-lg border border-slate-200 p-5 shadow-xs">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#17365D]" />
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Section E: Recent Audit Activity & Inter-Bureau Workflow Stream
+              </h2>
+              <p className="text-[11px] text-slate-500">
+                Live, immutable event log from database workflow history and audit records
+              </p>
+            </div>
+          </div>
+          <Link to="/audit" className="text-xs font-semibold text-[#17365D] hover:underline">
+            Full Audit Trail &rarr;
+          </Link>
+        </div>
+
+        <div className="space-y-2.5">
+          {recentActivities.length === 0 ? (
+            <div className="text-center py-6 text-slate-500 text-xs">No recent activity recorded yet.</div>
+          ) : (
+            recentActivities.map((act) => (
+              <div
+                key={act.id}
+                className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-md border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-colors"
+              >
+                <div className="flex items-start gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-teal-600 mt-1.5 shrink-0"></span>
+                  <div>
+                    <span className="font-bold text-slate-900">{act.action_type.replace(/_/g, ' ')}</span>
+                    <span className="text-slate-600 mx-1.5">&bull;</span>
+                    <span className="text-slate-700">{act.remarks || 'Administrative action logged'}</span>
+                    {act.previous_value && act.new_value && (
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                        {act.previous_value} &rarr; <span className="text-teal-700 font-semibold">{act.new_value}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0 text-[10px] text-slate-500 sm:self-center font-mono">
+                  <div>{act.performed_by_name || 'System Scheduler'}</div>
+                  <div>{new Date(act.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
 };
-

@@ -1,22 +1,36 @@
-// API Client for AICTE ICMS
+// API Client for AICTE Case360+
+const TOKEN_KEY = 'aicte_case360_token';
+const USER_KEY = 'aicte_case360_user';
+const LEGACY_TOKEN_KEY = 'aicte_icms_token';
+const LEGACY_USER_KEY = 'aicte_icms_user';
 
 const BASE_URL = '/api';
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem('aicte_icms_token');
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) return token;
+  // Backward compatibility migration for existing session
+  const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
+  if (legacyToken) {
+    localStorage.setItem(TOKEN_KEY, legacyToken);
+    return legacyToken;
+  }
+  return null;
 }
 
 export function setAuthToken(token: string) {
-  localStorage.setItem('aicte_icms_token', token);
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
 export function removeAuthToken() {
-  localStorage.removeItem('aicte_icms_token');
-  localStorage.removeItem('aicte_icms_user');
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
+  localStorage.removeItem(LEGACY_USER_KEY);
 }
 
 export function getStoredUser(): any | null {
-  const u = localStorage.getItem('aicte_icms_user');
+  const u = localStorage.getItem(USER_KEY) || localStorage.getItem(LEGACY_USER_KEY);
   try {
     return u ? JSON.parse(u) : null;
   } catch {
@@ -25,7 +39,7 @@ export function getStoredUser(): any | null {
 }
 
 export function setStoredUser(user: any) {
-  localStorage.setItem('aicte_icms_user', JSON.stringify(user));
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export async function apiRequest<T = any>(

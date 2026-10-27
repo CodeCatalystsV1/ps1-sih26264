@@ -10,8 +10,10 @@ import {
   AlertTriangle,
   BarChart3,
   History,
-  ShieldCheck,
   Users,
+  ShieldAlert,
+  Sparkles,
+  BookOpen,
 } from 'lucide-react';
 import { apiRequest } from '../../api/client';
 import { DashboardMetrics } from '../../types';
@@ -41,6 +43,7 @@ export const Sidebar: React.FC = () => {
     show: boolean;
     badge?: string | number;
     badgeStyle?: string;
+    isComingSoon?: boolean;
   }
 
   interface NavSection {
@@ -50,17 +53,17 @@ export const Sidebar: React.FC = () => {
 
   const sections: NavSection[] = [
     {
-      category: 'CORE MONITORING',
+      category: 'INSTITUTION & WORKSPACE',
       items: [
         {
           to: '/',
-          label: 'Executive Dashboard',
+          label: 'Overview',
           icon: LayoutDashboard,
           show: !isCitizenOnly,
         },
         {
           to: '/institutions',
-          label: 'Institutions Registry',
+          label: 'Institution 360°',
           icon: Building,
           show: !isCitizenOnly,
           badge: metrics?.institutions_with_active_cases,
@@ -69,11 +72,11 @@ export const Sidebar: React.FC = () => {
       ],
     },
     {
-      category: 'GRIEVANCE & CASE MANAGEMENT',
+      category: 'CASE & COMPLAINT WORKFLOW',
       items: [
         {
           to: '/complaints',
-          label: isCitizenOnly ? 'My Grievances' : 'Complaints & Inquiries',
+          label: isCitizenOnly ? 'My Grievances' : 'Complaints',
           icon: FileText,
           show: true,
           badge: metrics?.total_complaints,
@@ -81,7 +84,7 @@ export const Sidebar: React.FC = () => {
         },
         {
           to: '/cases',
-          label: 'Official Grievance Cases',
+          label: 'Regulatory Cases',
           icon: Briefcase,
           show: !isCitizenOnly,
           badge: metrics?.pending_cases ? `${metrics.pending_cases} Active` : undefined,
@@ -89,7 +92,7 @@ export const Sidebar: React.FC = () => {
         },
         {
           to: '/coordination',
-          label: 'Cross-Bureau Coordination',
+          label: 'Coordination Hub',
           icon: GitCompare,
           show: !isCitizenOnly,
           badge: metrics?.potential_overlaps ? `${metrics.potential_overlaps} Overlap` : undefined,
@@ -98,11 +101,11 @@ export const Sidebar: React.FC = () => {
       ],
     },
     {
-      category: 'STATUTORY OVERSIGHT',
+      category: 'OVERSIGHT & INTELLIGENCE',
       items: [
         {
           to: '/deadlines',
-          label: 'Alerts & SLA Deadlines',
+          label: 'Alerts & Deadlines',
           icon: AlertTriangle,
           show: !isCitizenOnly,
           badge: metrics?.overdue_cases ? `${metrics.overdue_cases} Due` : undefined,
@@ -120,30 +123,58 @@ export const Sidebar: React.FC = () => {
       category: 'SYSTEM ADMINISTRATION',
       items: [
         {
+          to: '/admin',
+          label: 'Administration',
+          icon: Users,
+          show: isAdmin,
+        },
+        {
           to: '/audit',
-          label: 'Security & Audit Trail',
+          label: 'Audit Trail',
           icon: History,
           show: isAdmin || hasRole(['ROLE_MANAGEMENT']),
         },
+      ],
+    },
+    {
+      category: 'CASE360+ PLANNED MODULES',
+      items: [
         {
-          to: '/admin',
-          label: 'Access Control & Users',
-          icon: Users,
-          show: isAdmin,
+          to: '#',
+          label: 'Action Conflict Guard',
+          icon: ShieldAlert,
+          show: !isCitizenOnly,
+          isComingSoon: true,
+        },
+        {
+          to: '#',
+          label: 'AI Relationship Intel',
+          icon: Sparkles,
+          show: !isCitizenOnly,
+          isComingSoon: true,
+        },
+        {
+          to: '#',
+          label: 'Regulatory Memory',
+          icon: BookOpen,
+          show: !isCitizenOnly,
+          isComingSoon: true,
         },
       ],
     },
   ];
 
   return (
-    <aside className="w-72 bg-gov-dark text-slate-300 flex flex-col shrink-0 border-r border-slate-700/80 select-none">
-      {/* Sidebar Header */}
+    <aside className="w-68 bg-[#102A43] text-slate-300 flex flex-col shrink-0 border-r border-slate-700/80 select-none">
+      {/* Sidebar Top Title */}
       <div className="px-4 py-3.5 border-b border-slate-800 bg-[#0c2033] flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
           Administrative Workspace
         </span>
-        <span className="text-[10px] text-slate-400 font-mono">v2.4</span>
+        <span className="text-[10px] text-teal-300 font-mono font-semibold bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/40">
+          Case360+
+        </span>
       </div>
 
       {/* Navigation Sections */}
@@ -160,28 +191,46 @@ export const Sidebar: React.FC = () => {
 
               {visibleItems.map((item) => {
                 const Icon = item.icon;
+
+                if (item.isComingSoon) {
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-500 rounded-md cursor-not-allowed opacity-60"
+                      title="Planned for Case360+ Phase 2 / Phase 3"
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <Icon className="w-4 h-4 shrink-0 text-slate-500" />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      <span className="text-[9px] font-mono uppercase bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
+                        Soon
+                      </span>
+                    </div>
+                  );
+                }
+
                 return (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     end={item.to === '/'}
                     className={({ isActive }) =>
-                      `flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-all ${
+                      `flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-all ${
                         isActive
-                          ? 'bg-[#1b3f68] text-white border-l-4 border-amber-400 shadow-sm font-semibold'
-                          : 'hover:bg-slate-800 hover:text-white text-slate-300'
+                          ? 'bg-[#17365D] text-white shadow-xs border-l-3 border-teal-400 font-semibold'
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                       }`
                     }
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <Icon className="w-4 h-4 shrink-0 text-slate-400" />
+                      <Icon className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-white" />
                       <span className="truncate">{item.label}</span>
                     </div>
-
-                    {item.badge !== undefined && item.badge !== null && item.badge !== 0 && (
+                    {item.badge !== undefined && (
                       <span
-                        className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono tracking-tight shrink-0 ${
-                          item.badgeStyle || 'bg-slate-800 text-slate-300 border border-slate-700'
+                        className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                          item.badgeStyle || 'bg-slate-800 text-slate-300'
                         }`}
                       >
                         {item.badge}
@@ -195,22 +244,14 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Bureau Info & Session Protocol Box */}
-      <div className="p-3.5 bg-[#0b1d30] border-t border-slate-800 text-[11px] text-slate-400 space-y-1.5 shrink-0">
-        <div className="flex items-center justify-between">
-          <span className="text-slate-400">Bureau Jurisdiction:</span>
-          <span className="font-semibold text-slate-200">
-            {user?.bureau_assignments?.[0]?.bureau?.code || 'Central'}
-          </span>
+      {/* User Session Footer */}
+      <div className="p-3 border-t border-slate-800 bg-[#0c2033]">
+        <div className="text-[11px] font-semibold text-white truncate">{user?.display_name || 'Authorized Official'}</div>
+        <div className="text-[10px] text-teal-400 truncate mt-0.5 font-mono">
+          {user?.bureau_assignments?.[0]?.bureau?.name || user?.roles?.[0]?.name || 'AICTE Officer'}
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-slate-400">Security Protocol:</span>
-          <span className="text-emerald-400 flex items-center gap-1 font-mono text-[10px]">
-            <ShieldCheck className="w-3.5 h-3.5" /> RBAC Enforced
-          </span>
-        </div>
+        <div className="text-[9px] text-slate-500 mt-1">SIH PS 26264 Prototype</div>
       </div>
     </aside>
   );
 };
-

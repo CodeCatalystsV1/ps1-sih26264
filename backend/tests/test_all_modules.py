@@ -12,7 +12,7 @@ def test_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert "AICTE ICMS" in data["service"]
+    assert "AICTE Case360+" in data["service"]
 
 def test_auth_login_success_and_failure():
     # 1. Invalid credentials
