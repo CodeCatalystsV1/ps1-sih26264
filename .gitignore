@@ -31,8 +31,11 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
-node_modules/
-dist/
-__pycache__/
-.venv/
-venv/
+# ML and HuggingFace caches
+.cache/
+hf_cache/
+models/
+*.pt
+*.bin
+*.onnx
+*.safetensors
