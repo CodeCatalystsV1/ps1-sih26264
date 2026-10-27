@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   ExternalLink,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 export const ComplaintDetailPage: React.FC = () => {
@@ -105,16 +106,26 @@ export const ComplaintDetailPage: React.FC = () => {
             </p>
           </div>
 
-          {complaint.linked_case_reference && (
-            <div className="p-3.5 bg-slate-50 rounded-md border border-gov-border text-left md:text-right shrink-0">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                Linked Official Case
-              </span>
-              <span className="font-mono font-bold text-gov-primary text-base block mt-0.5">
-                {complaint.linked_case_reference}
-              </span>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to={`/ai-relationships?complaint_id=${complaint.id}`}
+              className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-3 py-2 rounded flex items-center gap-1.5 shadow-sm transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Find Related Complaints (AI)</span>
+            </Link>
+
+            {complaint.linked_case_reference && (
+              <div className="p-3.5 bg-slate-50 rounded-md border border-gov-border text-left md:text-right shrink-0">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Linked Official Case
+                </span>
+                <span className="font-mono font-bold text-gov-primary text-base block mt-0.5">
+                  {complaint.linked_case_reference}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

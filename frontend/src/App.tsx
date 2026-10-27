@@ -17,6 +17,7 @@ import { AlertsDeadlinesPage } from './pages/AlertsDeadlinesPage';
 import { ReportsAnalyticsPage } from './pages/ReportsAnalyticsPage';
 import { AuditTrailPage } from './pages/AuditTrailPage';
 import { AdminPage } from './pages/AdminPage';
+import { AIRelationshipPage } from './pages/AIRelationshipPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
             <Route path="/cases/:id" element={<CaseDetailPage />} />
             <Route path="/coordination" element={<CoordinationWorkspacePage />} />
             <Route path="/action-conflicts" element={<ActionConflictGuardPage />} />
+            <Route path="/ai-relationships" element={<AIRelationshipPage />} />
             <Route path="/deadlines" element={<AlertsDeadlinesPage />} />
             <Route path="/reports" element={<ReportsAnalyticsPage />} />
             <Route path="/audit" element={<AuditTrailPage />} />

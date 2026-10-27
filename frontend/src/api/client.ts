@@ -127,3 +127,34 @@ export const actionsApi = {
       body: JSON.stringify(data),
     }),
 };
+
+// AI Complaint Relationship Intelligence API Client helpers (Phase 3)
+export const aiApi = {
+  getStats: () =>
+    apiRequest<import('../types').AIOverviewStats>('/ai/stats'),
+  matchComplaint: (complaintId: number, topK: number = 5, minSimilarity: number = 0.65) =>
+    apiRequest<import('../types').AIMatchComplaintResponse>('/ai/match-complaint', {
+      method: 'POST',
+      body: JSON.stringify({ complaint_id: complaintId, top_k: topK, min_similarity: minSimilarity }),
+    }),
+  listRelationships: (params?: Record<string, string | number | undefined>) => {
+    const validParams: [string, string][] = [];
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          validParams.push([k, String(v)]);
+        }
+      });
+    }
+    const qs = validParams.length > 0 ? '?' + new URLSearchParams(validParams).toString() : '';
+    return apiRequest<import('../types').AIRelationshipItem[]>(`/ai/relationships${qs}`);
+  },
+  getRelationshipById: (id: number) =>
+    apiRequest<import('../types').AIRelationshipItem>(`/ai/relationships/${id}`),
+  reviewRelationship: (id: number, decision: 'APPROVE_LINK' | 'DISMISS', reviewNotes: string) =>
+    apiRequest<import('../types').AIRelationshipItem>(`/ai/relationships/${id}/review`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, review_notes: reviewNotes }),
+    }),
+};
+

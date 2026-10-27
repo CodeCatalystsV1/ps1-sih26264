@@ -410,3 +410,62 @@ export interface ConflictResolutionRequest {
   resolution_type: 'REQUEST_COORDINATION' | 'REVISE_ACTION' | 'PROCEED_WITH_JUSTIFICATION' | 'DISMISS_FALSE_POSITIVE';
   resolution_notes?: string;
 }
+
+// ----------------- AI RELATIONSHIP INTELLIGENCE (PHASE 3) -----------------
+
+export interface AIRelationshipItem {
+  id?: number;
+  source_complaint_id: number;
+  source_reference: string;
+  source_title: string;
+  source_bureau?: string;
+  candidate_complaint_id: number;
+  candidate_reference: string;
+  candidate_title: string;
+  candidate_description?: string;
+  candidate_category?: string;
+  candidate_bureau?: string;
+  candidate_status: string;
+  institution_id?: number;
+  institution_name?: string;
+  permanent_id?: string;
+  semantic_similarity: number;
+  match_classification: 'POSSIBLY_RELATED' | 'NEEDS_REVIEW' | 'DIFFERENT_ISSUE' | 'INSTITUTION_UNCONFIRMED' | string;
+  explanation: string[];
+  status: 'PENDING_REVIEW' | 'APPROVED_LINK' | 'DISMISSED' | 'SUPERSEDED' | string;
+  suggested_action: 'COORDINATE' | 'OFFICER_REVIEW' | 'VERIFY_INSTITUTION' | 'NO_ACTION' | string;
+  is_cross_bureau: boolean;
+  created_at?: string;
+  reviewed_at?: string;
+  reviewed_by_id?: number;
+  reviewed_by_name?: string;
+  review_notes?: string;
+}
+
+export interface AIMatchComplaintResponse {
+  source_complaint_id: number;
+  source_reference: string;
+  source_title: string;
+  source_description?: string;
+  institution_id?: number;
+  institution_name?: string;
+  permanent_id?: string;
+  total_candidates_analyzed: number;
+  suggestions_count: number;
+  suggestions: AIRelationshipItem[];
+}
+
+export interface AIRelationshipReviewRequest {
+  decision: 'APPROVE_LINK' | 'DISMISS';
+  review_notes: string;
+}
+
+export interface AIOverviewStats {
+  pending_suggestions_count: number;
+  approved_links_count: number;
+  dismissed_suggestions_count: number;
+  total_analyzed_complaints_count: number;
+  model_identifier: string;
+  model_device: string;
+}
+

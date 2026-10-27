@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import json
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Index, UniqueConstraint, Table
+    Column, Integer, Float, String, Text, Boolean, DateTime, ForeignKey, Index, UniqueConstraint, Table
 )
 from sqlalchemy.orm import relationship
 from backend.app.core.database import Base
@@ -512,3 +512,48 @@ class ActionConflict(Base):
     existing_action = relationship("RegulatoryAction", foreign_keys=[existing_action_id], back_populates="conflicting_with")
     institution = relationship("Institution")
     reviewer = relationship("User", foreign_keys=[reviewed_by_id])
+
+
+class AIRelationshipSuggestion(Base):
+    __tablename__ = "ai_relationship_suggestions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_complaint_id = Column(Integer, ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True)
+    candidate_complaint_id = Column(Integer, ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="SET NULL"), nullable=True, index=True)
+    semantic_similarity = Column(Float, nullable=False)
+    match_classification = Column(String(50), nullable=False, index=True) # POSSIBLY_RELATED, NEEDS_REVIEW, DIFFERENT_ISSUE, INSTITUTION_UNCONFIRMED
+    explanation = Column(Text, nullable=True) # JSON-serialized list of explanatory bullet points
+    model_identifier = Column(String(100), default="intfloat/multilingual-e5-small", nullable=False)
+    model_revision = Column(String(50), default="main", nullable=False)
+    status = Column(String(50), default="PENDING_REVIEW", nullable=False, index=True) # PENDING_REVIEW, APPROVED_LINK, DISMISSED, SUPERSEDED
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    reviewed_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    review_notes = Column(Text, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("source_complaint_id", "candidate_complaint_id", name="uq_ai_relationship_pair"),
+    )
+
+    source_complaint = relationship("Complaint", foreign_keys=[source_complaint_id])
+    candidate_complaint = relationship("Complaint", foreign_keys=[candidate_complaint_id])
+    institution = relationship("Institution")
+    reviewer = relationship("User", foreign_keys=[reviewed_by_id])
+
+
+class ComplaintEmbedding(Base):
+    __tablename__ = "complaint_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    complaint_id = Column(Integer, ForeignKey("complaints.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    embedding_blob = Column(Text, nullable=False) # JSON-serialized 384-dimensional float vector
+    model_identifier = Column(String(100), default="intfloat/multilingual-e5-small", nullable=False)
+    model_revision = Column(String(50), default="main", nullable=False)
+    preprocessing_version = Column(String(20), default="v1.0", nullable=False)
+    content_hash = Column(String(64), nullable=False, index=True)
+    generated_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+    complaint = relationship("Complaint")
+

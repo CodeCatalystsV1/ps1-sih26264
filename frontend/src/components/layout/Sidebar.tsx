@@ -112,6 +112,14 @@ export const Sidebar: React.FC = () => {
       category: 'OVERSIGHT & INTELLIGENCE',
       items: [
         {
+          to: '/ai-relationships',
+          label: 'AI Relationship Intel',
+          icon: Sparkles,
+          show: !isCitizenOnly,
+          badge: 'E5-Live',
+          badgeStyle: 'bg-teal-950 text-teal-300 border border-teal-500/50 font-semibold',
+        },
+        {
           to: '/deadlines',
           label: 'Alerts & Deadlines',
           icon: AlertTriangle,
@@ -147,13 +155,6 @@ export const Sidebar: React.FC = () => {
     {
       category: 'CASE360+ PLANNED MODULES',
       items: [
-        {
-          to: '#',
-          label: 'AI Relationship Intel',
-          icon: Sparkles,
-          show: !isCitizenOnly,
-          isComingSoon: true,
-        },
         {
           to: '#',
           label: 'Regulatory Memory',

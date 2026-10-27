@@ -589,4 +589,68 @@ class ConflictResolutionRequest(BaseModel):
     resolution_type: str
     resolution_notes: str
 
+# ----------------- AI RELATIONSHIP INTELLIGENCE SCHEMAS (PHASE 3) -----------------
+
+class AIMatchComplaintRequest(BaseModel):
+    complaint_id: int
+    top_k: int = 5
+    min_similarity: float = 0.65
+    force_recompute: bool = False
+
+class AIRelationshipItem(BaseModel):
+    id: Optional[int] = None
+    source_complaint_id: int
+    source_reference: str
+    source_title: str
+    source_bureau: Optional[str] = None
+    candidate_complaint_id: int
+    candidate_reference: str
+    candidate_title: str
+    candidate_description: Optional[str] = None
+    candidate_category: Optional[str] = None
+    candidate_bureau: Optional[str] = None
+    candidate_status: str
+    institution_id: Optional[int] = None
+    institution_name: Optional[str] = None
+    permanent_id: Optional[str] = None
+    semantic_similarity: float
+    match_classification: str  # POSSIBLY_RELATED, NEEDS_REVIEW, DIFFERENT_ISSUE, INSTITUTION_UNCONFIRMED
+    explanation: List[str] = []
+    status: str = "PENDING_REVIEW"  # PENDING_REVIEW, APPROVED_LINK, DISMISSED, SUPERSEDED
+    suggested_action: str = "OFFICER_REVIEW"  # COORDINATE, OFFICER_REVIEW, NO_ACTION
+    is_cross_bureau: bool = False
+    created_at: Optional[datetime] = None
+    reviewed_at: Optional[datetime] = None
+    reviewed_by_id: Optional[int] = None
+    reviewed_by_name: Optional[str] = None
+    review_notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AIMatchComplaintResponse(BaseModel):
+    source_complaint_id: int
+    source_reference: str
+    source_title: str
+    source_description: Optional[str] = None
+    institution_id: Optional[int] = None
+    institution_name: Optional[str] = None
+    permanent_id: Optional[str] = None
+    total_candidates_analyzed: int
+    suggestions_count: int
+    suggestions: List[AIRelationshipItem] = []
+
+class AIRelationshipReviewRequest(BaseModel):
+    decision: str  # "APPROVE_LINK" or "DISMISS"
+    review_notes: str  # Mandatory officer notes
+
+class AIOverviewStats(BaseModel):
+    pending_suggestions_count: int
+    approved_links_count: int
+    dismissed_suggestions_count: int
+    total_analyzed_complaints_count: int
+    model_identifier: str
+    model_device: str
+
 InstitutionDetailOut.model_rebuild()
+

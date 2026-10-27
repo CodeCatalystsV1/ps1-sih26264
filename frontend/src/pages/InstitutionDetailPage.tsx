@@ -17,13 +17,17 @@ import {
   ArrowRight,
   ExternalLink,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
+import { aiApi } from '../api/client';
+import { AIRelationshipItem } from '../types';
 
 export const InstitutionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [institution, setInstitution] = useState<InstitutionDetail | null>(null);
   const [regulatoryActions, setRegulatoryActions] = useState<RegulatoryAction[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'complaints' | 'cases' | 'bureaus' | 'overlaps' | 'actions'>('overview');
+  const [aiRelationships, setAiRelationships] = useState<AIRelationshipItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'complaints' | 'cases' | 'bureaus' | 'overlaps' | 'actions' | 'ai_intel'>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +38,12 @@ export const InstitutionDetailPage: React.FC = () => {
       setInstitution(data);
       const acts = await apiRequest<RegulatoryAction[]>(`/actions?institution_id=${id}`);
       setRegulatoryActions(acts);
+      try {
+        const aiRels = await aiApi.listRelationships({ institution_id: Number(id) });
+        setAiRelationships(aiRels);
+      } catch {
+        // AI relationships table might be empty
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load institution profile');
     } finally {
@@ -182,6 +192,7 @@ export const InstitutionDetailPage: React.FC = () => {
             { id: 'bureaus', label: `Bureau Involvement (${institution.involved_bureaus.length})`, icon: Building },
             { id: 'overlaps', label: `Overlap Alerts (${institution.overlap_flags.length})`, icon: GitCompare },
             { id: 'actions', label: `Regulatory Actions (${regulatoryActions.length})`, icon: ShieldAlert },
+            { id: 'ai_intel', label: `AI Relationship Intel (${aiRelationships.length})`, icon: Sparkles },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -503,6 +514,95 @@ export const InstitutionDetailPage: React.FC = () => {
                     }`}>
                       {act.status}
                     </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: AI Relationship Intelligence */}
+      {activeTab === 'ai_intel' && (
+        <div className="bg-white rounded-md border border-gov-border shadow-sm p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                <span>AI Complaint Relationship Intelligence (Multilingual-E5)</span>
+              </h3>
+              <p className="text-slate-500 text-xs mt-0.5">
+                Machine learning detected relationships for verified institution {institution.permanent_id}
+              </p>
+            </div>
+            <Link
+              to={`/ai-relationships`}
+              className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition self-start sm:self-auto"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Open AI Intelligence Hub</span>
+            </Link>
+          </div>
+
+          {aiRelationships.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 text-xs space-y-2">
+              <Sparkles className="w-8 h-8 mx-auto text-slate-300" />
+              <p>No AI complaint relationships recorded yet for this institution.</p>
+              <p className="text-[11px] text-slate-400">
+                Run AI analysis on any complaint from the Complaint Details page or the AI Intelligence Hub.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {aiRelationships.map((rel) => (
+                <div key={rel.id} className="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-800 text-xs">
+                        {rel.source_reference} &harr; {rel.candidate_reference}
+                      </span>
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-teal-100 text-teal-800">
+                        {Math.round(rel.semantic_similarity * 100)}% Similarity
+                      </span>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${
+                        rel.match_classification === 'POSSIBLY_RELATED'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {rel.match_classification}
+                      </span>
+                      {rel.is_cross_bureau && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800 border border-amber-300">
+                          Cross-Bureau
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      Target: {rel.candidate_title} ({rel.candidate_bureau || 'Bureau'})
+                    </div>
+                    {rel.explanation && rel.explanation.length > 0 && (
+                      <div className="text-[11px] text-slate-500 italic">
+                        "{rel.explanation[0]}"
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end md:self-center">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      rel.status === 'APPROVED_LINK'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : rel.status === 'DISMISSED'
+                        ? 'bg-slate-100 text-slate-600'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
+                      {rel.status}
+                    </span>
+                    <Link
+                      to={`/ai-relationships`}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium"
+                    >
+                      View in Hub
+                    </Link>
                   </div>
                 </div>
               ))}

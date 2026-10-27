@@ -25,6 +25,10 @@ from backend.app.models.entities import (
     Document,
     AuditLog,
     ApplicationSetting,
+    RegulatoryAction,
+    ActionConflict,
+    AIRelationshipSuggestion,
+    ComplaintEmbedding,
     user_roles,
     role_permissions,
 )
@@ -56,6 +60,10 @@ __all__ = [
     "Document",
     "AuditLog",
     "ApplicationSetting",
+    "RegulatoryAction",
+    "ActionConflict",
+    "AIRelationshipSuggestion",
+    "ComplaintEmbedding",
     "user_roles",
     "role_permissions",
 ]
