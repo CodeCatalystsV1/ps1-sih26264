@@ -115,6 +115,30 @@ export const CoordinationWorkspacePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Coordination Hub Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-700/60 pb-1">
+        <Link
+          to="/coordination"
+          className="px-4 py-2 rounded-lg text-xs font-bold bg-[#102A43] text-teal-300 border border-teal-500/50 flex items-center gap-2 shadow-sm"
+        >
+          <GitCompare className="w-4 h-4 text-teal-400" />
+          <span>Case Overlaps (Institutional Dockets)</span>
+          <span className="px-1.5 py-0.5 rounded bg-teal-950 text-teal-300 text-[10px] font-mono">
+            {overlaps.length}
+          </span>
+        </Link>
+        <Link
+          to="/action-conflicts"
+          className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent hover:border-slate-700 flex items-center gap-2 transition-colors"
+        >
+          <ShieldAlert className="w-4 h-4 text-amber-400" />
+          <span>Action Conflict Guard (Pre-Execution Warnings)</span>
+          <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 text-[10px] font-mono border border-amber-800/40">
+            Phase 2
+          </span>
+        </Link>
+      </div>
+
       {/* Main Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left List of Overlap Flags */}

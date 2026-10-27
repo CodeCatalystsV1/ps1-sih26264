@@ -93,3 +93,37 @@ export async function apiRequest<T = any>(
 
   return response.json();
 }
+
+// Action Conflict Guard API Client helpers
+export const actionsApi = {
+  validate: (data: any) =>
+    apiRequest<any>('/actions/validate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  create: (data: any) =>
+    apiRequest<any>('/actions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  list: (params?: Record<string, string | number>) => {
+    const qs = params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : '';
+    return apiRequest<any[]>(`/actions${qs}`);
+  },
+  getById: (id: number) => apiRequest<any>(`/actions/${id}`),
+  update: (id: number, data: any) =>
+    apiRequest<any>(`/actions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  listConflicts: (params?: Record<string, string | number>) => {
+    const qs = params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : '';
+    return apiRequest<any[]>(`/actions/conflicts${qs}`);
+  },
+  getConflictById: (id: number) => apiRequest<any>(`/actions/conflicts/${id}`),
+  resolveConflict: (id: number, data: { resolution_type: string; resolution_notes?: string }) =>
+    apiRequest<any>(`/actions/conflicts/${id}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};

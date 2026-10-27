@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiRequest } from '../api/client';
-import { InstitutionDetail, CaseSimple, ComplaintSimple } from '../types';
+import { InstitutionDetail, CaseSimple, ComplaintSimple, RegulatoryAction } from '../types';
 import {
   Building,
   MapPin,
@@ -16,12 +16,14 @@ import {
   ChevronRight,
   ArrowRight,
   ExternalLink,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const InstitutionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [institution, setInstitution] = useState<InstitutionDetail | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'complaints' | 'cases' | 'bureaus' | 'overlaps'>('overview');
+  const [regulatoryActions, setRegulatoryActions] = useState<RegulatoryAction[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'complaints' | 'cases' | 'bureaus' | 'overlaps' | 'actions'>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +32,8 @@ export const InstitutionDetailPage: React.FC = () => {
     try {
       const data = await apiRequest<InstitutionDetail>(`/institutions/${id}`);
       setInstitution(data);
+      const acts = await apiRequest<RegulatoryAction[]>(`/actions?institution_id=${id}`);
+      setRegulatoryActions(acts);
     } catch (err: any) {
       setError(err.message || 'Failed to load institution profile');
     } finally {
@@ -177,6 +181,7 @@ export const InstitutionDetailPage: React.FC = () => {
             { id: 'cases', label: `Active Official Cases (${institution.cases.length})`, icon: Briefcase },
             { id: 'bureaus', label: `Bureau Involvement (${institution.involved_bureaus.length})`, icon: Building },
             { id: 'overlaps', label: `Overlap Alerts (${institution.overlap_flags.length})`, icon: GitCompare },
+            { id: 'actions', label: `Regulatory Actions (${regulatoryActions.length})`, icon: ShieldAlert },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -429,6 +434,79 @@ export const InstitutionDetailPage: React.FC = () => {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {/* Tab 6: Regulatory Actions & Conflicts */}
+      {activeTab === 'actions' && (
+        <div className="bg-white p-5 rounded-md border border-gov-border shadow-sm text-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-600" />
+                Cross-Bureau Regulatory Actions & Conflict Guard History
+              </h3>
+              <p className="text-slate-500 text-[11px] mt-0.5">
+                Statutory regulatory actions (inspections, document requests, notices) initiated by various Bureaus for this institution.
+              </p>
+            </div>
+            <Link
+              to="/action-conflicts"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-semibold text-xs flex items-center gap-1.5 transition-colors"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              Action Conflict Guard Workspace
+            </Link>
+          </div>
+
+          {regulatoryActions.length === 0 ? (
+            <div className="text-center text-slate-400 py-8">
+              No regulatory actions registered yet for this institution.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-md overflow-hidden">
+              {regulatoryActions.map((act) => (
+                <div key={act.id} className="p-4 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-800 text-teal-300">
+                        {act.bureau_code || 'BUREAU'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded font-mono font-semibold text-[10px] bg-blue-100 text-blue-800 border border-blue-200">
+                        {act.action_type}
+                      </span>
+                      <span className="font-bold text-slate-900 text-sm">{act.title}</span>
+                      {act.active_conflicts_count && act.active_conflicts_count > 0 ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-300 animate-pulse">
+                          {act.active_conflicts_count} Potential Conflict Warning(s)
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-slate-600 text-xs">{act.description}</p>
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
+                      <span>Category: <strong className="text-slate-700">{act.subject_category}</strong></span>
+                      <span>&bull;</span>
+                      <span>Scheduled: <strong className="text-slate-700">{act.scheduled_date ? new Date(act.scheduled_date).toLocaleDateString() : 'N/A'}</strong></span>
+                      <span>&bull;</span>
+                      <span>Case: <Link to={`/cases/${act.case_id}`} className="text-gov-primary font-semibold hover:underline">#{act.case_number || act.case_id}</Link></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end md:self-center">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      act.status === 'PENDING_CONFLICT_REVIEW'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : act.status === 'APPROVED' || act.status === 'COMPLETED'
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                        : 'bg-slate-100 text-slate-700 border border-slate-300'
+                    }`}>
+                      {act.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

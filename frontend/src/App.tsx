@@ -12,6 +12,7 @@ import { ComplaintDetailPage } from './pages/ComplaintDetailPage';
 import { CasesPage } from './pages/CasesPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
 import { CoordinationWorkspacePage } from './pages/CoordinationWorkspacePage';
+import { ActionConflictGuardPage } from './pages/ActionConflictGuardPage';
 import { AlertsDeadlinesPage } from './pages/AlertsDeadlinesPage';
 import { ReportsAnalyticsPage } from './pages/ReportsAnalyticsPage';
 import { AuditTrailPage } from './pages/AuditTrailPage';
@@ -58,6 +59,7 @@ export const App: React.FC = () => {
             <Route path="/cases" element={<CasesPage />} />
             <Route path="/cases/:id" element={<CaseDetailPage />} />
             <Route path="/coordination" element={<CoordinationWorkspacePage />} />
+            <Route path="/action-conflicts" element={<ActionConflictGuardPage />} />
             <Route path="/deadlines" element={<AlertsDeadlinesPage />} />
             <Route path="/reports" element={<ReportsAnalyticsPage />} />
             <Route path="/audit" element={<AuditTrailPage />} />

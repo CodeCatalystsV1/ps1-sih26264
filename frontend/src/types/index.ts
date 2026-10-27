@@ -332,3 +332,81 @@ export interface SLARule {
   escalation_threshold_days: number;
   enabled: boolean;
 }
+
+export interface RegulatoryAction {
+  id: number;
+  case_id: number;
+  case_number?: string;
+  institution_id: number;
+  institution_name?: string;
+  institution_permanent_id?: string;
+  bureau_id: number;
+  bureau_code?: string;
+  bureau_name?: string;
+  created_by_id: number;
+  created_by_name?: string;
+  action_type: string;
+  title: string;
+  description: string;
+  subject_category: string;
+  scheduled_date?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  active_conflicts_count?: number;
+}
+
+export interface ActionConflict {
+  id: number;
+  proposed_action_id: number;
+  existing_action_id: number;
+  institution_id: number;
+  institution_name?: string;
+  institution_permanent_id?: string;
+  conflict_type: string;
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  explanation: string;
+  status: string;
+  detected_at: string;
+  reviewed_by_id?: number;
+  reviewed_by_name?: string;
+  reviewed_at?: string;
+  resolution_type?: string;
+  resolution_notes?: string;
+  proposed_action?: RegulatoryAction;
+  existing_action?: RegulatoryAction;
+}
+
+export interface ActionConflictItem {
+  existing_action_id: number;
+  existing_action_title: string;
+  existing_action_type: string;
+  existing_bureau_code: string;
+  existing_scheduled_date?: string;
+  conflict_type: string;
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  explanation: string;
+}
+
+export interface ActionValidationResponse {
+  has_conflicts: boolean;
+  conflict_count: number;
+  highest_severity?: 'HIGH' | 'MEDIUM' | 'LOW';
+  potential_conflicts: ActionConflictItem[];
+}
+
+export interface ActionValidationRequest {
+  case_id: number;
+  action_type: string;
+  title: string;
+  description: string;
+  subject_category: string;
+  scheduled_date?: string;
+}
+
+export interface RegulatoryActionCreate extends ActionValidationRequest {}
+
+export interface ConflictResolutionRequest {
+  resolution_type: 'REQUEST_COORDINATION' | 'REVISE_ACTION' | 'PROCEED_WITH_JUSTIFICATION' | 'DISMISS_FALSE_POSITIVE';
+  resolution_notes?: string;
+}

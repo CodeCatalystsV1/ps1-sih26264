@@ -98,6 +98,14 @@ export const Sidebar: React.FC = () => {
           badge: metrics?.potential_overlaps ? `${metrics.potential_overlaps} Overlap` : undefined,
           badgeStyle: 'bg-red-950 text-red-200 border border-red-500/50 font-bold',
         },
+        {
+          to: '/action-conflicts',
+          label: 'Action Conflict Guard',
+          icon: ShieldAlert,
+          show: !isCitizenOnly,
+          badge: 'Active Guard',
+          badgeStyle: 'bg-amber-950 text-amber-200 border border-amber-500/50 font-semibold',
+        },
       ],
     },
     {
@@ -139,13 +147,6 @@ export const Sidebar: React.FC = () => {
     {
       category: 'CASE360+ PLANNED MODULES',
       items: [
-        {
-          to: '#',
-          label: 'Action Conflict Guard',
-          icon: ShieldAlert,
-          show: !isCitizenOnly,
-          isComingSoon: true,
-        },
         {
           to: '#',
           label: 'AI Relationship Intel',

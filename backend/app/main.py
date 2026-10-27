@@ -19,6 +19,7 @@ from backend.app.api.notifications import router as notifications_router
 from backend.app.api.reports import router as reports_router
 from backend.app.api.audit import router as audit_router
 from backend.app.api.admin import router as admin_router
+from backend.app.api.regulatory_actions import router as actions_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,6 +60,7 @@ app.include_router(notifications_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(audit_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(actions_router, prefix=settings.API_V1_STR)
 
 @app.get("/api/health")
 def health_check():

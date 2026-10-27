@@ -12,7 +12,8 @@ from backend.app.models.entities import (
     Institution, ComplaintCategory, CaseStatus, CaseTransition,
     Complaint, Case, ComplaintCaseLink, Assignment, Transfer,
     WorkflowHistory, SLARule, Notification, NotificationRecipient,
-    OverlapFlag, CaseRelationship, CoordinationDecision
+    OverlapFlag, CaseRelationship, CoordinationDecision,
+    RegulatoryAction, ActionConflict
 )
 from backend.app.core.security import get_password_hash
 from backend.app.services.overlap_service import detect_overlaps_for_institution
@@ -511,6 +512,156 @@ def seed_database():
             )
             db.add(trans1)
 
+        # =========================================================================
+        # SEED PHASE 2: REGULATORY ACTION CONFLICT SCENARIOS (A through F)
+        # =========================================================================
+        print("Seeding synthetic Regulatory Actions and Action Conflict scenarios...")
+
+        # Action 1 (Scenario A / Existing): RB laboratory infrastructure inspection at DEMO-AICTE-001
+        act1 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Expert Committee Physical Inspection of Engineering Laboratories").first()
+        if not act1:
+            act1 = RegulatoryAction(
+                case_id=case2.id, # RB Case CASE-2026-0002
+                institution_id=inst_a.id,
+                bureau_id=bureaus_map["RB"].id,
+                created_by_id=users_map["rb_officer"].id,
+                action_type="INSPECTION",
+                title="Expert Committee Physical Inspection of Engineering Laboratories",
+                description="On-site physical verification of computing machinery, AI/ML laboratories, and electronics hardware apparatus against APH 2026 norms.",
+                subject_category="LAB_INFRASTRUCTURE",
+                scheduled_date=now + timedelta(days=12),
+                status="SCHEDULED",
+                created_at=now - timedelta(days=2),
+                updated_at=now - timedelta(days=2)
+            )
+            db.add(act1)
+            db.flush()
+
+        # Action 2 (Scenario A / Proposed): PGRC laboratory infrastructure inspection at DEMO-AICTE-001 -> HIGH CONFLICT!
+        act2 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Grievance On-Site Fact-Finding: Laboratory Facilities").first()
+        if not act2:
+            act2 = RegulatoryAction(
+                case_id=case1.id, # PGRC Case CASE-2026-0001
+                institution_id=inst_a.id,
+                bureau_id=bureaus_map["PGRC"].id,
+                created_by_id=users_map["pgrc_officer"].id,
+                action_type="INSPECTION",
+                title="Grievance On-Site Fact-Finding: Laboratory Facilities",
+                description="Investigating student grievance regarding missing lab apparatus and locked computing facilities.",
+                subject_category="LAB_INFRASTRUCTURE",
+                scheduled_date=now + timedelta(days=14),
+                status="PENDING_CONFLICT_REVIEW",
+                created_at=now - timedelta(days=1),
+                updated_at=now - timedelta(days=1)
+            )
+            db.add(act2)
+            db.flush()
+
+            # Seed Detected Action Conflict between Action 2 and Action 1
+            conf1 = ActionConflict(
+                proposed_action_id=act2.id,
+                existing_action_id=act1.id,
+                institution_id=inst_a.id,
+                conflict_type="DUPLICATE_INSPECTION",
+                severity="HIGH",
+                explanation=f"Potential duplicate inspection (within 2 days): Regulation Bureau has already scheduled a '{act1.title}' covering subject 'LAB_INFRASTRUCTURE' for {inst_a.institution_name} under case {case2.case_reference}.",
+                status="PENDING_REVIEW",
+                detected_at=now - timedelta(days=1)
+            )
+            db.add(conf1)
+
+        # Action 3 (Scenario D / Existing): RB requests admission records at DEMO-AICTE-002
+        act3 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Requisition of Verified Admission Registers and Fee Ledgers").first()
+        if not act3:
+            act3 = RegulatoryAction(
+                case_id=case_b_rb.id, # RB Case CASE-2026-0006
+                institution_id=inst_b.id,
+                bureau_id=bureaus_map["RB"].id,
+                created_by_id=users_map["rb_officer"].id,
+                action_type="DOCUMENT_REQUEST",
+                title="Requisition of Verified Admission Registers and Fee Ledgers",
+                description="Submission of certified admission registers, bank account fee ledgers, and audited statements for AY 2025-26.",
+                subject_category="ADMISSION_NORMS",
+                scheduled_date=now + timedelta(days=7),
+                status="SCHEDULED",
+                created_at=now - timedelta(days=3),
+                updated_at=now - timedelta(days=3)
+            )
+            db.add(act3)
+            db.flush()
+
+        # Action 4 (Scenario D / Proposed): PGRC requests same category documents at DEMO-AICTE-002 -> REDUNDANT_DOCUMENT_REQUEST
+        act4 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Directive to Furnish Student Caution Deposit Records").first()
+        if not act4:
+            act4 = RegulatoryAction(
+                case_id=case3.id, # PGRC Case CASE-2026-0003
+                institution_id=inst_b.id,
+                bureau_id=bureaus_map["PGRC"].id,
+                created_by_id=users_map["pgrc_officer"].id,
+                action_type="DOCUMENT_REQUEST",
+                title="Directive to Furnish Student Caution Deposit Records",
+                description="Submit verified ledgers and caution deposit receipts collected during student intake.",
+                subject_category="ADMISSION_NORMS",
+                scheduled_date=now + timedelta(days=9),
+                status="PENDING_CONFLICT_REVIEW",
+                created_at=now - timedelta(days=1),
+                updated_at=now - timedelta(days=1)
+            )
+            db.add(act4)
+            db.flush()
+
+            conf2 = ActionConflict(
+                proposed_action_id=act4.id,
+                existing_action_id=act3.id,
+                institution_id=inst_b.id,
+                conflict_type="REDUNDANT_DOCUMENT_REQUEST",
+                severity="HIGH",
+                explanation=f"Redundant document demand: Regulation Bureau has already issued document requisition '{act3.title}' for category 'ADMISSION_NORMS' under case {case_b_rb.case_reference}. Consolidate requests to prevent repetitive compliance burdens.",
+                status="COORDINATION_REQUESTED",
+                detected_at=now - timedelta(days=1)
+            )
+            db.add(conf2)
+
+        # Action 5 (Scenario E / Cancelled): Cancelled infrastructure inspection
+        act5 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Cancelled Routine Inspection of Building Safety").first()
+        if not act5:
+            act5 = RegulatoryAction(
+                case_id=case1.id,
+                institution_id=inst_a.id,
+                bureau_id=bureaus_map["PGRC"].id,
+                created_by_id=users_map["pgrc_officer"].id,
+                action_type="INSPECTION",
+                title="Cancelled Routine Inspection of Building Safety",
+                description="Routine inspection cancelled due to institutional administrative holiday.",
+                subject_category="FIRE_SAFETY",
+                scheduled_date=now - timedelta(days=10),
+                status="CANCELLED",
+                created_at=now - timedelta(days=15),
+                updated_at=now - timedelta(days=10)
+            )
+            db.add(act5)
+            db.flush()
+
+        # Action 6 (Scenario B / Unrelated): Faculty compliance review at DEMO-AICTE-006 (No conflict)
+        act6 = db.query(RegulatoryAction).filter(RegulatoryAction.title == "Verification of Doctoral Faculty Rosters").first()
+        if not act6:
+            act6 = RegulatoryAction(
+                case_id=case_g.id,
+                institution_id=inst_f.id,
+                bureau_id=bureaus_map["AB"].id,
+                created_by_id=users_map["admin"].id,
+                action_type="COMPLIANCE_REVIEW",
+                title="Verification of Doctoral Faculty Rosters",
+                description="Reviewing doctoral cadre ratios for newly proposed computer science courses.",
+                subject_category="FACULTY_QUALIFICATION",
+                scheduled_date=now + timedelta(days=20),
+                status="APPROVED",
+                created_at=now - timedelta(days=2),
+                updated_at=now - timedelta(days=2)
+            )
+            db.add(act6)
+            db.flush()
+
         db.commit()
 
         # Execute Overlap Detection Engine across all institutions
@@ -518,7 +669,6 @@ def seed_database():
         for inst in db.query(Institution).all():
             flag = detect_overlaps_for_institution(db, inst.id)
             if flag and inst.permanent_id == "DEMO-AICTE-002":
-                # Mark DEMO-AICTE-002 as COORDINATION_REQUESTED for Scenario D
                 flag.relationship_state = "COORDINATION_REQUESTED"
                 flag.coordination_owner_id = users_map["bureau_head"].id
         db.commit()

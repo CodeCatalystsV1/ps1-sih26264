@@ -432,3 +432,83 @@ class ApplicationSetting(Base):
     description = Column(String(255), nullable=True)
     updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+class RegulatoryAction(Base):
+    __tablename__ = "regulatory_actions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
+    bureau_id = Column(Integer, ForeignKey("bureaus.id", ondelete="RESTRICT"), nullable=False, index=True)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    
+    # Types: INSPECTION, SHOW_CAUSE_NOTICE, DOCUMENT_REQUEST, COMPLIANCE_REVIEW, HEARING, OTHER
+    action_type = Column(String(50), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    
+    # Standardized regulatory subject categories:
+    # LAB_INFRASTRUCTURE, FACULTY_QUALIFICATION, ADMISSION_NORMS, FEE_REGULATION,
+    # FIRE_SAFETY, AFFILIATION_CONDITIONS, ACADEMIC_CURRICULUM, GOVERNANCE_DISPUTE, OTHER
+    subject_category = Column(String(100), nullable=False, index=True)
+    scheduled_date = Column(DateTime(timezone=True), nullable=True)
+    
+    # Statuses: DRAFT, PROPOSED, PENDING_CONFLICT_REVIEW, APPROVED, SCHEDULED, COMPLETED, CANCELLED
+    status = Column(String(50), default="PROPOSED", nullable=False, index=True)
+    
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+    case = relationship("Case")
+    institution = relationship("Institution")
+    bureau = relationship("Bureau")
+    creator = relationship("User", foreign_keys=[created_by_id])
+
+    # Conflicts where this action is proposed
+    detected_conflicts = relationship(
+        "ActionConflict",
+        foreign_keys="ActionConflict.proposed_action_id",
+        back_populates="proposed_action",
+        cascade="all, delete-orphan"
+    )
+    # Conflicts where this action is the existing obstacle
+    conflicting_with = relationship(
+        "ActionConflict",
+        foreign_keys="ActionConflict.existing_action_id",
+        back_populates="existing_action",
+        cascade="all, delete-orphan"
+    )
+
+class ActionConflict(Base):
+    __tablename__ = "action_conflicts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    proposed_action_id = Column(Integer, ForeignKey("regulatory_actions.id", ondelete="CASCADE"), nullable=False, index=True)
+    existing_action_id = Column(Integer, ForeignKey("regulatory_actions.id", ondelete="CASCADE"), nullable=False, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Conflict classifications:
+    # DUPLICATE_INSPECTION, REDUNDANT_DOCUMENT_REQUEST, RELATED_NOTICE,
+    # POSSIBLE_CONTRADICTORY_DIRECTION, OVERLAPPING_COMPLIANCE_REVIEW
+    conflict_type = Column(String(80), nullable=False, index=True)
+    
+    # Severity: HIGH, MEDIUM, LOW
+    severity = Column(String(20), default="MEDIUM", nullable=False, index=True)
+    explanation = Column(Text, nullable=False)
+    
+    # Statuses: PENDING_REVIEW, COORDINATION_REQUESTED, RESOLVED_COORDINATED,
+    # RESOLVED_REVISED, RESOLVED_AUTHORIZED_OVERRIDE, DISMISSED_FALSE_POSITIVE
+    status = Column(String(50), default="PENDING_REVIEW", nullable=False, index=True)
+    
+    detected_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    reviewed_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Resolution decision: REQUEST_COORDINATION, REVISE_ACTION, PROCEED_WITH_JUSTIFICATION, DISMISS_FALSE_POSITIVE
+    resolution_type = Column(String(50), nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+
+    proposed_action = relationship("RegulatoryAction", foreign_keys=[proposed_action_id], back_populates="detected_conflicts")
+    existing_action = relationship("RegulatoryAction", foreign_keys=[existing_action_id], back_populates="conflicting_with")
+    institution = relationship("Institution")
+    reviewer = relationship("User", foreign_keys=[reviewed_by_id])

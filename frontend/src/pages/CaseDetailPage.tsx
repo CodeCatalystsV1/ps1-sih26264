@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { apiRequest } from '../api/client';
-import { CaseDetail, Bureau, User } from '../types';
+import { apiRequest, actionsApi } from '../api/client';
+import { CaseDetail, Bureau, User, RegulatoryAction } from '../types';
 import {
   Briefcase,
   Building,
@@ -18,11 +18,15 @@ import {
   ShieldCheck,
   Send,
   Calendar,
+  ShieldAlert,
+  Sparkles,
+  Plus,
 } from 'lucide-react';
 
 export const CaseDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [caseItem, setCaseItem] = useState<CaseDetail | null>(null);
+  const [actions, setActions] = useState<RegulatoryAction[]>([]);
   const [bureaus, setBureaus] = useState<Bureau[]>([]);
   const [officers, setOfficers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +60,8 @@ export const CaseDetailPage: React.FC = () => {
     try {
       const data = await apiRequest<CaseDetail>(`/cases/${id}`);
       setCaseItem(data);
+      const acts = await apiRequest<RegulatoryAction[]>(`/actions?case_id=${id}`);
+      setActions(acts);
     } catch (err: any) {
       setError(err.message || 'Failed to load case');
     } finally {
@@ -302,6 +308,79 @@ export const CaseDetailPage: React.FC = () => {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Regulatory Actions & Conflict Guard Card */}
+          <div className="gov-card p-5 space-y-4">
+            <div className="gov-card-header flex items-center justify-between pb-3">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-600" />
+                Regulatory Actions & Pre-Execution Conflict Guard ({actions.length})
+              </h3>
+              <Link
+                to="/action-conflicts"
+                className="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded font-semibold text-xs flex items-center gap-1 shadow-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Propose Action
+              </Link>
+            </div>
+
+            {actions.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+                <ShieldAlert className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+                <p className="font-semibold text-slate-700">No regulatory actions proposed for this case docket yet.</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Proposed actions (inspections, document demands, show-cause notices) will be automatically evaluated by the Conflict Guard before execution.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {actions.map((act) => (
+                  <div key={act.id} className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-800 text-teal-300">
+                          {act.bureau_code || 'BUREAU'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded font-mono font-semibold text-[10px] bg-blue-100 text-blue-800 border border-blue-200">
+                          {act.action_type}
+                        </span>
+                        <span className="font-bold text-slate-900 text-xs">{act.title}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        act.status === 'PENDING_CONFLICT_REVIEW'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : act.status === 'APPROVED' || act.status === 'COMPLETED'
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : 'bg-slate-100 text-slate-700 border border-slate-300'
+                      }`}>
+                        {act.status}
+                      </span>
+                    </div>
+
+                    <p className="text-slate-600 text-xs leading-relaxed">{act.description}</p>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
+                      <span>Subject: <strong className="text-slate-700">{act.subject_category}</strong></span>
+                      <span>Scheduled: <strong className="text-slate-700">{act.scheduled_date ? new Date(act.scheduled_date).toLocaleDateString() : 'N/A'}</strong></span>
+                      {act.active_conflicts_count && act.active_conflicts_count > 0 ? (
+                        <Link
+                          to="/action-conflicts"
+                          className="text-red-700 font-bold hover:underline flex items-center gap-1"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                          {act.active_conflicts_count} Active Conflict Warning(s) &rarr;
+                        </Link>
+                      ) : (
+                        <span className="text-emerald-700 font-medium flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" /> No Active Conflicts
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Chronological Workflow History */}

@@ -478,4 +478,115 @@ class SLARuleOut(BaseModel):
     class Config:
         from_attributes = True
 
+# --- ACTION CONFLICT GUARD SCHEMAS ---
+
+class ActionValidationRequest(BaseModel):
+    case_id: int
+    action_type: str # INSPECTION, SHOW_CAUSE_NOTICE, DOCUMENT_REQUEST, COMPLIANCE_REVIEW, HEARING, OTHER
+    title: str
+    description: str
+    subject_category: str # LAB_INFRASTRUCTURE, FACULTY_QUALIFICATION, ADMISSION_NORMS, etc.
+    scheduled_date: Optional[datetime] = None
+
+class ActionConflictItem(BaseModel):
+    existing_action_id: int
+    existing_action_title: str
+    existing_action_type: str
+    existing_subject_category: str
+    existing_bureau_name: str
+    existing_bureau_code: str
+    existing_case_reference: str
+    existing_status: str
+    existing_scheduled_date: Optional[datetime] = None
+    conflict_type: str
+    severity: str # HIGH, MEDIUM, LOW
+    explanation: str
+    is_cross_bureau: bool
+
+class ActionValidationResponse(BaseModel):
+    has_conflicts: bool
+    conflict_count: int
+    highest_severity: Optional[str] = None
+    institution_id: int
+    institution_name: str
+    permanent_id: str
+    conflicts: List[ActionConflictItem] = []
+
+class RegulatoryActionCreate(BaseModel):
+    case_id: int
+    action_type: str
+    title: str
+    description: str
+    subject_category: str
+    scheduled_date: Optional[datetime] = None
+    status: Optional[str] = "PROPOSED"
+    override_justification: Optional[str] = None
+
+class RegulatoryActionUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    subject_category: Optional[str] = None
+    scheduled_date: Optional[datetime] = None
+    status: Optional[str] = None
+    override_justification: Optional[str] = None
+
+class RegulatoryActionOut(BaseModel):
+    id: int
+    case_id: int
+    case_reference: str
+    institution_id: int
+    institution_name: str
+    permanent_id: str
+    bureau_id: int
+    bureau_name: str
+    bureau_code: str
+    created_by_id: Optional[int] = None
+    created_by_name: Optional[str] = None
+    action_type: str
+    title: str
+    description: str
+    subject_category: str
+    scheduled_date: Optional[datetime] = None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    active_conflicts_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+class ActionConflictOut(BaseModel):
+    id: int
+    proposed_action_id: int
+    proposed_action_title: str
+    proposed_action_type: str
+    proposed_bureau_name: str
+    proposed_case_reference: str
+    existing_action_id: int
+    existing_action_title: str
+    existing_action_type: str
+    existing_bureau_name: str
+    existing_case_reference: str
+    institution_id: int
+    institution_name: str
+    permanent_id: str
+    conflict_type: str
+    severity: str
+    explanation: str
+    status: str
+    detected_at: datetime
+    reviewed_by_id: Optional[int] = None
+    reviewed_by_name: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    resolution_type: Optional[str] = None
+    resolution_notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class ConflictResolutionRequest(BaseModel):
+    # REQUEST_COORDINATION, REVISE_ACTION, PROCEED_WITH_JUSTIFICATION, DISMISS_FALSE_POSITIVE
+    resolution_type: str
+    resolution_notes: str
+
 InstitutionDetailOut.model_rebuild()
