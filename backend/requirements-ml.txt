@@ -1,0 +1,26 @@
+# AICTE Case360+ — Machine Learning Dependencies (Phase 3)
+# ==============================================================================
+# IMPORTANT: PyTorch CPU-only build for Windows should be installed first using:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+# Then install this file:
+#   pip install -r backend/requirements-ml.txt
+# ==============================================================================
+
+-r requirements.txt
+
+# Core Array & Numerical Computation
+numpy>=1.26.0,<2.1.0
+
+# String Similarity & Normalization for Institutions
+rapidfuzz>=3.9.0
+
+# Transformer-based Semantic Representations
+sentence-transformers>=3.0.0
+transformers>=4.45.0
+tokenizers>=0.20.0
+huggingface-hub>=0.24.0
+
+# Scikit-Learn / SciPy for Clustering & Cosine Metrics
+scikit-learn>=1.4.0
+scipy>=1.13.0
