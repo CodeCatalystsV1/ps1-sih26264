@@ -278,7 +278,7 @@ export const InstitutionsPage: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. DEMO-AICTE-006"
+                    placeholder="e.g. 1-44642766198"
                     value={formData.permanent_id}
                     onChange={(e) => setFormData({ ...formData, permanent_id: e.target.value })}
                     className="gov-input font-mono"

@@ -103,7 +103,7 @@ class Institution(Base):
     __tablename__ = "institutions"
 
     id = Column(Integer, primary_key=True, index=True)
-    permanent_id = Column(String(50), unique=True, nullable=False, index=True) # AICTE Permanent ID e.g. "DEMO-AICTE-001"
+    permanent_id = Column(String(50), unique=True, nullable=False, index=True) # AICTE Permanent ID e.g. "1-44642766198"
     institution_name = Column(String(255), nullable=False, index=True)
     institution_type = Column(String(100), nullable=False) # "Engineering & Technology", "Management", "Pharmacy", "Polytechnic", etc.
     address = Column(Text, nullable=False)

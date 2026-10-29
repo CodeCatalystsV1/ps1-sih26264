@@ -159,19 +159,29 @@ def seed_database():
         db.flush()
         print("[OK] SLA Rules seeded.")
 
-        # 7. Seed Fictional Demonstration Institutions (10 Total)
-        # All institutions explicitly labelled as Fictional Demonstration Entities
+        # 7. Seed Real Landmark Institutions from AICTE Dataset (10 Total Primary)
+        INST_A_ID = "1-44642766198"  # Galgotias College of Engineering & Technology
+        INST_B_ID = "1-44642983297"  # SCTR's Pune Institute of Computer Technology
+        INST_C_ID = "1-44638516258"  # Madras School of Economics
+        INST_D_ID = "1-44641836728"  # Government College of Engineering and Leather Technology
+        INST_E_ID = "1-44640076273"  # Jaipur Engineering College and Research Centre
+        INST_F_ID = "1-44641783475"  # R.V. College of Engineering
+        INST_G_ID = "1-44638374598"  # St Marys Centenary College of Management
+        INST_H_ID = "1-44640144514"  # Delhi Technological University
+        INST_I_ID = "1-44638345258"  # Suryodaya College of Engineering & Technology
+        INST_J_ID = "1-44638508781"  # Behala Government Polytechnic
+
         institutions_data = [
-            ("DEMO-AICTE-001", "Demo Institute A — Technology & Science", "Engineering & Technology", "Knowledge City, Sector 62", "Noida", "Gautam Buddha Nagar", "Uttar Pradesh", "NRO", "Kanpur", "201301", "contact@demo-inst-a.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-002", "Demo Institute B — College of Engineering", "Engineering & Technology", "University Road, Shivaji Nagar", "Pune", "Pune", "Maharashtra", "WRO", "Mumbai", "411005", "info@demo-inst-b.edu.in", "VERIFIED"),
-            ("DEMO-AICTE-003", "Demo Institute C — Institute of Management & Technology", "Management", "Old Mahabalipuram Road", "Chennai", "Chennai", "Tamil Nadu", "SRO", "Chennai", "600096", "registrar@demo-inst-c.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-004", "Demo Institute D — Polytechnic & Technical Studies", "Polytechnic", "Bidhannagar Sector V", "Kolkata", "North 24 Parganas", "West Bengal", "ERO", "Kolkata", "700091", "admin@demo-inst-d.org", "VERIFIED"),
-            ("DEMO-AICTE-005", "Demo Institute E — Global College of Pharmacy", "Pharmacy", "Malviya Nagar Extension", "Jaipur", "Jaipur", "Rajasthan", "NRO", "Kanpur", "302017", "pharmacy@demo-inst-e.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-006", "Demo Institute F — Apex Institute of Technology", "Engineering & Technology", "Electronic City Phase 1", "Bengaluru", "Bengaluru Urban", "Karnataka", "SRO", "Chennai", "560100", "principal@demo-inst-f.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-007", "Demo Institute G — National Institute of Applied Sciences", "Applied Sciences", "Gachibowli Tech Zone", "Hyderabad", "Rangareddy", "Telangana", "SRO", "Chennai", "500032", "contact@demo-inst-g.edu.in", "VERIFIED"),
-            ("DEMO-AICTE-008", "Demo Institute H — Metropolitan School of Architecture", "Architecture & Planning", "Vasant Kunj Institutional Area", "New Delhi", "South West Delhi", "Delhi", "NRO", "Kanpur", "110070", "admin@demo-inst-h.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-009", "Demo Institute I — Vidya College of Technical Education", "Polytechnic", "Sitabuldi Main Road", "Nagpur", "Nagpur", "Maharashtra", "WRO", "Mumbai", "440012", "info@demo-inst-i.ac.in", "VERIFIED"),
-            ("DEMO-AICTE-010", "Demo Institute J — Premier Institute of Hotel Management", "Hotel Management", "Salt Lake Sector II", "Kolkata", "Kolkata", "West Bengal", "ERO", "Kolkata", "700064", "office@demo-inst-j.org", "VERIFIED"),
+            (INST_A_ID, "GALGOTIAS COLLEGE OF ENGINEERING & TECHNOLOGY", "Engineering & Technology", "1, Knowledge Park-II, Greater Noida", "Greater Noida", "Gautam Buddha Nagar", "Uttar Pradesh", "NRO", "Kanpur", "201306", "director@galgotiacollege.edu", "VERIFIED"),
+            (INST_B_ID, "SCTR'S PUNE INSTITUTE OF COMPUTER TECHNOLOGY", "Engineering & Technology", "Survey No. 27, Near Trimurti Chowk, Bharati Vidyapeeth Campus, Dhankawadi", "Pune", "Pune", "Maharashtra", "WRO", "Mumbai", "411043", "principal@pict.edu", "VERIFIED"),
+            (INST_C_ID, "MADRAS SCHOOL OF ECONOMICS", "Management", "Behind Anna Centenary Library, Gandhi Mandapam Road, Kottur", "Chennai", "Chennai", "Tamil Nadu", "SRO", "Chennai", "600025", "director@mse.ac.in", "VERIFIED"),
+            (INST_D_ID, "GOVERNMENT COLLEGE OF ENGINEERING AND LEATHER TECHNOLOGY", "Engineering & Technology", "LB Block, Sector III, Salt Lake City", "Kolkata", "North 24 Parganas", "West Bengal", "ERO", "Kolkata", "700106", "principal@gcelt.gov.in", "VERIFIED"),
+            (INST_E_ID, "JAIPUR ENGINEERING COLLEGE AND RESEARCH CENTRE", "Engineering & Technology", "JECRC Campus, Shri Ram Ki Nangal, Via Vatika, Tonk Road", "Jaipur", "Jaipur", "Rajasthan", "NRO", "Kanpur", "302022", "principal@jecrc.ac.in", "VERIFIED"),
+            (INST_F_ID, "R.V. COLLEGE OF ENGINEERING", "Engineering & Technology", "RV Vidyaniketan Post, Mysore Road", "Bengaluru", "Bangalore Urban", "Karnataka", "SRO", "Chennai", "560059", "principal@rvce.edu.in", "VERIFIED"),
+            (INST_G_ID, "ST MARYS CENTENARY COLLEGE OF MANAGEMENT", "Management", "PR No. 9-1-257/1, Regimental Bazar, Secunderabad", "Hyderabad", "Hyderabad", "Telangana", "SRO", "Chennai", "500025", "principal@stmaryscollege.in", "VERIFIED"),
+            (INST_H_ID, "DELHI TECHNOLOGICAL UNIVERSITY", "Engineering & Technology", "Shahbad Daulatpur, Bawana Road", "New Delhi", "North West Delhi", "Delhi", "NRO", "Kanpur", "110042", "registrar@dtu.ac.in", "VERIFIED"),
+            (INST_I_ID, "SURYODAYA COLLEGE OF ENGINEERING & TECHNOLOGY", "Engineering & Technology", "Survey No. 117/1 & 117/3 A, Vihirgaon, Umrer Road", "Nagpur", "Nagpur", "Maharashtra", "WRO", "Mumbai", "441204", "principal@scetngp.com", "VERIFIED"),
+            (INST_J_ID, "BEHALA GOVERNMENT POLYTECHNIC", "Polytechnic", "756, Upendra Nath Banerjee Road, Parnasree", "Kolkata", "Kolkata", "West Bengal", "ERO", "Kolkata", "700060", "principal@behalagovtpoly.org", "VERIFIED"),
         ]
         insts_map = {}
         for perm_id, name, itype, addr, city, dist, state, r_code, roffice, pin, mail, v_status in institutions_data:
@@ -197,15 +207,15 @@ def seed_database():
                 db.add(inst)
                 db.flush()
             insts_map[perm_id] = inst
-        print(f"[OK] {len(institutions_data)} Fictional Demonstration Institutions seeded.")
+        print(f"[OK] {len(institutions_data)} Real Landmark Institutions seeded.")
 
         # =========================================================================
         # SEED CASE360+ CROSS-BUREAU DEMO SCENARIOS
         # =========================================================================
 
-        # SCENARIO A: Two Related Complaints across PGRC and RB (DEMO-AICTE-001)
+        # SCENARIO A: Two Related Complaints across PGRC and RB (INST_A_ID)
         # Capitation Fee & Roster Deficiencies under separate investigation
-        inst_a = insts_map["DEMO-AICTE-001"]
+        inst_a = insts_map.get(INST_A_ID) or db.query(Institution).filter(Institution.id == 1).first()
 
         c1 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0001").first()
         if not c1:
@@ -341,9 +351,9 @@ def seed_database():
             )
             db.add(wf2)
 
-        # SCENARIO B: Two Unrelated Complaints on Same Institution (DEMO-AICTE-006)
+        # SCENARIO B: Two Unrelated Complaints on Same Institution (INST_F_ID)
         # One regarding Hostel Wi-Fi (Student Welfare) and one regarding Library books (Infrastructure)
-        inst_f = insts_map["DEMO-AICTE-006"]
+        inst_f = insts_map.get(INST_F_ID) or db.query(Institution).filter(Institution.id == 6).first()
         c3 = db.query(Complaint).filter(Complaint.complaint_reference == "CMP-2026-0003").first()
         if not c3:
             c3 = Complaint(
@@ -384,8 +394,8 @@ def seed_database():
             db.add(c4)
             db.flush()
 
-        # SCENARIO C: Cases Involving Distinct Institutions (DEMO-AICTE-007 and DEMO-AICTE-008)
-        inst_g = insts_map["DEMO-AICTE-007"]
+        # SCENARIO C: Cases Involving Distinct Institutions (INST_G_ID and INST_H_ID)
+        inst_g = insts_map.get(INST_G_ID) or db.query(Institution).filter(Institution.id == 7).first()
         case_g = db.query(Case).filter(Case.case_reference == "CASE-2026-0007").first()
         if not case_g:
             case_g = Case(
@@ -406,9 +416,9 @@ def seed_database():
             db.add(case_g)
             db.flush()
 
-        # SCENARIO D: A Pending Cross-Bureau Coordination Request (DEMO-AICTE-002)
+        # SCENARIO D: A Pending Cross-Bureau Coordination Request (INST_B_ID)
         # PGRC case and Regulation Bureau inquiry pending joint committee review
-        inst_b = insts_map["DEMO-AICTE-002"]
+        inst_b = insts_map.get(INST_B_ID) or db.query(Institution).filter(Institution.id == 2).first()
         case3 = db.query(Case).filter(Case.case_reference == "CASE-2026-0003").first()
         if not case3:
             case3 = Case(
@@ -451,9 +461,9 @@ def seed_database():
             db.add(case_b_rb)
             db.flush()
 
-        # SCENARIO E: Overdue Case Requiring Supervisor Attention (Already present on DEMO-AICTE-002, CASE-2026-0003)
-        # Additional Disposed Case demonstration on DEMO-AICTE-003
-        inst_c = insts_map["DEMO-AICTE-003"]
+        # SCENARIO E: Overdue Case Requiring Supervisor Attention (Already present on INST_B_ID, CASE-2026-0003)
+        # Additional Disposed Case demonstration on INST_C_ID
+        inst_c = insts_map.get(INST_C_ID) or db.query(Institution).filter(Institution.id == 3).first()
         case4 = db.query(Case).filter(Case.case_reference == "CASE-2026-0004").first()
         if not case4:
             case4 = Case(
@@ -476,7 +486,7 @@ def seed_database():
             db.flush()
 
         # Inst D: Transferred case demonstration
-        inst_d = insts_map["DEMO-AICTE-004"]
+        inst_d = insts_map.get(INST_D_ID) or db.query(Institution).filter(Institution.id == 4).first()
         case5 = db.query(Case).filter(Case.case_reference == "CASE-2026-0005").first()
         if not case5:
             case5 = Case(
@@ -664,11 +674,11 @@ def seed_database():
 
         db.commit()
 
-        # Execute Overlap Detection Engine across all institutions
+        # Execute Overlap Detection Engine across primary institutions
         print("Executing deterministic cross-bureau overlap detection engine...")
-        for inst in db.query(Institution).all():
+        for inst in db.query(Institution).filter(Institution.id <= 10).all():
             flag = detect_overlaps_for_institution(db, inst.id)
-            if flag and inst.permanent_id == "DEMO-AICTE-002":
+            if flag and inst.permanent_id in ("DEMO-AICTE-002", INST_B_ID):
                 flag.relationship_state = "COORDINATION_REQUESTED"
                 flag.coordination_owner_id = users_map["bureau_head"].id
         db.commit()

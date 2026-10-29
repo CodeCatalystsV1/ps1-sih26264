@@ -20,6 +20,11 @@ import {
   Check,
   X,
   FileSearch,
+  Send,
+  Bot,
+  User as UserIcon,
+  MessageSquare,
+  RotateCcw,
 } from 'lucide-react';
 import { aiApi, apiRequest } from '../api/client';
 import {
@@ -58,6 +63,73 @@ export const AIRelationshipPage: React.FC = () => {
   const [reviewDecision, setReviewDecision] = useState<'APPROVE_LINK' | 'DISMISS'>('APPROVE_LINK');
   const [reviewNotes, setReviewNotes] = useState<string>('');
   const [submittingReview, setSubmittingReview] = useState<boolean>(false);
+
+  // RAG Window Chat State
+  const PREPARED_QUESTION = "How does the AI engine detect duplicate complaints across bureaus?";
+  const PREPARED_ANSWER = `The AICTE Case360+ RAG Intelligence Engine detects cross-bureau duplicates through a 4-stage pipeline:
+
+1. Deterministic Permanent ID Resolution: Standardizes AICTE institution IDs (e.g., 1-44642766198) and normalizes common technical educational abbreviations to prevent campus-level blindspots.
+2. Multilingual E5 Dense Embeddings: Converts complaint narratives into 384-dimensional normalized vector representations using intfloat/multilingual-e5-small to identify thematic overlap across English, Hindi, and regional languages.
+3. Cross-Bureau Overlap Guard: Actively monitors concurrent proceedings across PGRC (Public Grievances), Regulation Bureau (Compliance), and Approval Bureau to prevent duplicate campus inspections or redundant record requests.
+4. Explainable Human-in-the-Loop Scrutiny: High-affinity candidates (cosine similarity ≥ 0.85) are presented to bureau supervisors with transparent rationale for final administrative approval.`;
+
+  const [ragMessages, setRagMessages] = useState<Array<{ id: string; sender: 'user' | 'assistant'; text: string; timestamp: string }>>([
+    {
+      id: 'welcome',
+      sender: 'assistant',
+      text: 'How can I help you? ',
+      timestamp: 'Just now',
+    },
+  ]);
+  const [ragInput, setRagInput] = useState<string>('');
+  const [ragIsThinking, setRagIsThinking] = useState<boolean>(false);
+  const chatBottomRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [ragMessages, ragIsThinking]);
+
+  const handleRagSubmit = (e?: React.FormEvent, overrideText?: string) => {
+    if (e) e.preventDefault();
+    const query = (overrideText ?? ragInput).trim();
+    if (!query || ragIsThinking) return;
+
+    const userMsgId = 'user_' + Date.now();
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setRagMessages((prev) => [
+      ...prev,
+      { id: userMsgId, sender: 'user', text: query, timestamp: nowTime },
+    ]);
+    setRagInput('');
+    setRagIsThinking(true);
+
+    // 2-second thinking delay as requested
+    setTimeout(() => {
+      const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+      const isMatch =
+        normalizedQuery.includes('duplicate') ||
+        normalizedQuery.includes('how does the ai engine detect') ||
+        normalizedQuery.includes('detect duplicate complaints') ||
+        normalizedQuery.includes('cross bureau') ||
+        normalizedQuery.includes('how does ai');
+
+      const responseText = isMatch
+        ? PREPARED_ANSWER
+        : `I am currently configured with the prepared RAG benchmark question.\n\nPlease ask: "${PREPARED_QUESTION}" (or click the quick question pill above).`;
+
+      setRagMessages((prev) => [
+        ...prev,
+        {
+          id: 'ai_' + Date.now(),
+          sender: 'assistant',
+          text: responseText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+      setRagIsThinking(false);
+    }, 2000);
+  };
 
   // Check URL params for initial match request
   useEffect(() => {
@@ -254,335 +326,467 @@ export const AIRelationshipPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Section B: Find & Match Complaints Live Workspace (AI Panel) */}
-      <div className="ai-panel p-6 rounded-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <FileSearch className="w-4 h-4 text-teal-700" />
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
-              Analyze Grievance for Relationships (Live ML Inference)
-            </h2>
-          </div>
-          <span className="text-xs text-slate-500">
-            Select an existing complaint to trigger real-time Multilingual E5 inference
-          </span>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <select
-              value={selectedComplaintId}
-              onChange={(e) => setSelectedComplaintId(e.target.value ? Number(e.target.value) : '')}
-              className="w-full text-xs bg-slate-50 border border-slate-300 rounded px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
-            >
-              <option value="">-- Choose a Complaint to Analyze --</option>
-              {complaintsPool.map((c) => (
-                <option key={c.id} value={c.id}>
-                  [{c.complaint_reference}] {c.title.length > 70 ? c.title.substring(0, 70) + '...' : c.title} (
-                  {c.assigned_bureau_name || 'UNALLOCATED'})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={handleRunAnalysis}
-            disabled={!selectedComplaintId || isAnalyzing}
-            className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
-              !selectedComplaintId || isAnalyzing
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                : 'bg-royal-main hover:bg-royal-deep text-white shadow-soft hover:shadow-elevated'
-            }`}
-          >
-            <Sparkles className={`w-4 h-4 ${isAnalyzing ? 'animate-spin text-amber-300' : 'text-sky-200'}`} />
-            <span>{isAnalyzing ? 'Running E5-Small Model...' : 'Run AI Analysis'}</span>
-          </button>
-        </div>
-
-        {/* Live Match Result Feedback Banner */}
-        {matchResult && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
-            <div className="flex items-center justify-between text-royal-navy font-bold">
-              <span>
-                Analysis Result for {matchResult.source_reference}: {matchResult.source_title}
-              </span>
-              <span className="bg-blue-200/80 text-royal-deep px-2 py-0.5 rounded text-[11px] font-mono">
-                {matchResult.suggestions_count} suggestion(s) retrieved from {matchResult.total_candidates_analyzed} candidates
+      {/* Workspace Grid: Left Column (Analysis & Table) + Right Column (RAG Window) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        {/* Left Column (8 cols): Analysis workspace & Tables */}
+        <div className="xl:col-span-8 space-y-6">
+          {/* Section B: Find & Match Complaints Live Workspace (AI Panel) */}
+          <div className="ai-panel p-6 rounded-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <FileSearch className="w-4 h-4 text-teal-700" />
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
+                  Analyze Grievance for Relationships (Live ML Inference)
+                </h2>
+              </div>
+              <span className="text-xs text-slate-500">
+                Select an existing complaint to trigger real-time Multilingual E5 inference
               </span>
             </div>
-            <p className="text-royal-deep text-[11px]">
-              Institution: <span className="font-semibold text-slate-900">{matchResult.institution_name}</span> ({matchResult.permanent_id})
-            </p>
-          </div>
-        )}
-      </div>
 
-      {/* Section C: Suggestions Table & Filter Controls */}
-      <div className="bg-white rounded-xl shadow-soft border border-slate-200/90 overflow-hidden">
-        {/* Tab Header */}
-        <div className="border-b border-slate-200 bg-slate-50/70 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('PENDING_REVIEW')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                activeTab === 'PENDING_REVIEW'
-                  ? 'bg-amber-600 text-white shadow-soft'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Pending Review ({stats?.pending_suggestions_count ?? 0})
-            </button>
-            <button
-              onClick={() => setActiveTab('APPROVED_LINK')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                activeTab === 'APPROVED_LINK'
-                  ? 'bg-emerald-600 text-white shadow-soft'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Approved Links ({stats?.approved_links_count ?? 0})
-            </button>
-            <button
-              onClick={() => setActiveTab('DISMISSED')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                activeTab === 'DISMISSED'
-                  ? 'bg-slate-700 text-white shadow-soft'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              Dismissed ({stats?.dismissed_suggestions_count ?? 0})
-            </button>
-            <button
-              onClick={() => setActiveTab('ALL')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                activeTab === 'ALL'
-                  ? 'bg-royal-main text-white shadow-soft'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              All Records
-            </button>
-          </div>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative flex-1 w-full">
+                <select
+                  value={selectedComplaintId}
+                  onChange={(e) => setSelectedComplaintId(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                >
+                  <option value="">-- Choose a Complaint to Analyze --</option>
+                  {complaintsPool.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      [{c.complaint_reference}] {c.title.length > 70 ? c.title.substring(0, 70) + '...' : c.title} (
+                      {c.assigned_bureau_name || 'UNALLOCATED'})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search reference or keywords..."
-                className="text-xs bg-white border border-slate-300 rounded pl-8 pr-3 py-1.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-600 w-48 sm:w-60"
-              />
+              <button
+                onClick={handleRunAnalysis}
+                disabled={!selectedComplaintId || isAnalyzing}
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${!selectedComplaintId || isAnalyzing
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-royal-main hover:bg-royal-deep text-white shadow-soft hover:shadow-elevated'
+                  }`}
+              >
+                <Sparkles className={`w-4 h-4 ${isAnalyzing ? 'animate-spin text-amber-300' : 'text-sky-200'}`} />
+                <span>{isAnalyzing ? 'Running E5-Small Model...' : 'Run AI Analysis'}</span>
+              </button>
             </div>
 
-            <select
-              value={classificationFilter}
-              onChange={(e) => setClassificationFilter(e.target.value)}
-              className="text-xs bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-600"
-            >
-              <option value="ALL">All Classifications</option>
-              <option value="POSSIBLY_RELATED">Possibly Related</option>
-              <option value="NEEDS_REVIEW">Needs Review</option>
-              <option value="DIFFERENT_ISSUE">Different Issue</option>
-              <option value="INSTITUTION_UNCONFIRMED">Institution Unconfirmed</option>
-            </select>
+            {/* Live Match Result Feedback Banner */}
+            {matchResult && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2 text-xs">
+                <div className="flex items-center justify-between text-royal-navy font-bold">
+                  <span>
+                    Analysis Result for {matchResult.source_reference}: {matchResult.source_title}
+                  </span>
+                  <span className="bg-blue-200/80 text-royal-deep px-2 py-0.5 rounded text-[11px] font-mono">
+                    {matchResult.suggestions_count} suggestion(s) retrieved from {matchResult.total_candidates_analyzed} candidates
+                  </span>
+                </div>
+                <p className="text-royal-deep text-[11px]">
+                  Institution: <span className="font-semibold text-slate-900">{matchResult.institution_name}</span> ({matchResult.permanent_id})
+                </p>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Content Table */}
-        {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-2">
-            <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
-            <span>Loading AI relationship recommendations...</span>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-xs text-red-600 bg-red-50 border-t border-red-200">
-            {error}
-          </div>
-        ) : filteredRelationships.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 space-y-2">
-            <Sparkles className="w-8 h-8 text-slate-300 mx-auto" />
-            <div className="text-sm font-semibold text-slate-700">No suggestions found in this view</div>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Use the "Analyze Grievance" workspace above to run pretrained multilingual embedding matching against registered complaints.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
-                  <th className="py-2.5 px-3">Grievance Pair</th>
-                  <th className="py-2.5 px-3">Institution & Verification</th>
-                  <th className="py-2.5 px-3">Bureau Context</th>
-                  <th className="py-2.5 px-3">Semantic Score</th>
-                  <th className="py-2.5 px-3">Classification</th>
-                  <th className="py-2.5 px-3">Review Status</th>
-                  <th className="py-2.5 px-3 text-right">Officer Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredRelationships.map((item) => {
-                  const pct = Math.round(item.semantic_similarity * 100);
-                  const isPending = item.status === 'PENDING_REVIEW';
-                  const isApproved = item.status === 'APPROVED_LINK';
-                  const isDismissed = item.status === 'DISMISSED';
+          {/* Section C: Suggestions Table & Filter Controls */}
+          <div className="bg-white rounded-xl shadow-soft border border-slate-200/90 overflow-hidden">
+            {/* Tab Header */}
+            <div className="border-b border-slate-200 bg-slate-50/70 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 overflow-x-auto">
+                <button
+                  onClick={() => setActiveTab('PENDING_REVIEW')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${activeTab === 'PENDING_REVIEW'
+                    ? 'bg-amber-600 text-white shadow-soft'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                >
+                  Pending Review ({stats?.pending_suggestions_count ?? 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('APPROVED_LINK')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${activeTab === 'APPROVED_LINK'
+                    ? 'bg-emerald-600 text-white shadow-soft'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                >
+                  Approved Links ({stats?.approved_links_count ?? 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('DISMISSED')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${activeTab === 'DISMISSED'
+                    ? 'bg-slate-700 text-white shadow-soft'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                >
+                  Dismissed ({stats?.dismissed_suggestions_count ?? 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('ALL')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${activeTab === 'ALL'
+                    ? 'bg-royal-main text-white shadow-soft'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                >
+                  All Records
+                </button>
+              </div>
 
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                      {/* Pair references */}
-                      <td className="py-3 px-3">
-                        <div className="space-y-1">
-                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                            <span>{item.source_reference}</span>
-                            <ArrowRight className="w-3 h-3 text-slate-400" />
-                            <span>{item.candidate_reference}</span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 max-w-xs truncate" title={item.source_title}>
-                            Source: {item.source_title}
-                          </div>
-                          <div className="text-[11px] text-slate-600 max-w-xs truncate font-medium" title={item.candidate_title}>
-                            Target: {item.candidate_title}
-                          </div>
-                        </div>
-                      </td>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search reference or keywords..."
+                    className="text-xs bg-white border border-slate-300 rounded pl-8 pr-3 py-1.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-600 w-48 sm:w-60"
+                  />
+                </div>
 
-                      {/* Institution */}
-                      <td className="py-3 px-3">
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-800">{item.institution_name}</div>
-                          <div className="text-[11px] text-slate-500 font-mono">PID: {item.permanent_id}</div>
-                          <span className="inline-block px-1.5 py-0.2 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
-                            Verified Match
-                          </span>
-                        </div>
-                      </td>
+                <select
+                  value={classificationFilter}
+                  onChange={(e) => setClassificationFilter(e.target.value)}
+                  className="text-xs bg-white border border-slate-300 rounded px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                >
+                  <option value="ALL">All Classifications</option>
+                  <option value="POSSIBLY_RELATED">Possibly Related</option>
+                  <option value="NEEDS_REVIEW">Needs Review</option>
+                  <option value="DIFFERENT_ISSUE">Different Issue</option>
+                  <option value="INSTITUTION_UNCONFIRMED">Institution Unconfirmed</option>
+                </select>
+              </div>
+            </div>
 
-                      {/* Bureau Context */}
-                      <td className="py-3 px-3">
-                        <div className="space-y-1">
-                          {item.is_cross_bureau ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 rounded">
-                              <GitCompare className="w-3 h-3" /> Cross-Bureau
-                            </span>
-                          ) : (
-                            <span className="inline-block px-2 py-0.5 text-[10px] bg-slate-100 text-slate-700 border border-slate-200 rounded">
-                              Internal Bureau
-                            </span>
-                          )}
-                          <div className="text-[11px] text-slate-500">
-                            {item.source_bureau || 'PGRC'} vs {item.candidate_bureau || 'RB'}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Semantic Score */}
-                      <td className="py-3 px-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between font-bold text-slate-800">
-                            <span>{pct}%</span>
-                            <span className="text-[10px] text-slate-400">({item.semantic_similarity.toFixed(3)})</span>
-                          </div>
-                          <div className="w-24 bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                pct >= 80 ? 'bg-emerald-600' : pct >= 70 ? 'bg-amber-500' : 'bg-slate-400'
-                              }`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Classification */}
-                      <td className="py-3 px-3">
-                        {item.match_classification === 'POSSIBLY_RELATED' && (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            Possibly Related
-                          </span>
-                        )}
-                        {item.match_classification === 'NEEDS_REVIEW' && (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                            Needs Review
-                          </span>
-                        )}
-                        {item.match_classification === 'DIFFERENT_ISSUE' && (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-300">
-                            Different Issue
-                          </span>
-                        )}
-                        {item.match_classification === 'INSTITUTION_UNCONFIRMED' && (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800 border border-red-300">
-                            Unconfirmed Inst.
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-3">
-                        {isPending && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            <Clock className="w-3 h-3" /> Pending Review
-                          </span>
-                        )}
-                        {isApproved && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <CheckCircle className="w-3 h-3" /> Approved Link
-                          </span>
-                        )}
-                        {isDismissed && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
-                            <XCircle className="w-3 h-3" /> Dismissed
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setComparingItem(item)}
-                            className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition"
-                          >
-                            Compare Evidence
-                          </button>
-
-                          {isPending && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setReviewingItem(item);
-                                  setReviewDecision('APPROVE_LINK');
-                                  setReviewNotes('Approved relationship based on verifiable semantic & institutional overlap.');
-                                }}
-                                className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded border border-emerald-300 transition"
-                                title="Approve Link"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setReviewingItem(item);
-                                  setReviewDecision('DISMISS');
-                                  setReviewNotes('Dismissed: Complaints represent distinct administrative issues.');
-                                }}
-                                className="p-1 bg-red-100 hover:bg-red-200 text-red-800 rounded border border-red-300 transition"
-                                title="Dismiss Suggestion"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+            {/* Content Table */}
+            {loading ? (
+              <div className="p-12 text-center text-xs text-slate-500 flex flex-col items-center justify-center gap-2">
+                <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
+                <span>Loading AI relationship recommendations...</span>
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center text-xs text-red-600 bg-red-50 border-t border-red-200">
+                {error}
+              </div>
+            ) : filteredRelationships.length === 0 ? (
+              <div className="p-12 text-center text-slate-500 space-y-2">
+                <Sparkles className="w-8 h-8 text-slate-300 mx-auto" />
+                <div className="text-sm font-semibold text-slate-700">No suggestions found in this view</div>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  Use the "Analyze Grievance" workspace above to run pretrained multilingual embedding matching against registered complaints.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
+                      <th className="py-2.5 px-3">Grievance Pair</th>
+                      <th className="py-2.5 px-3">Institution & Verification</th>
+                      <th className="py-2.5 px-3">Bureau Context</th>
+                      <th className="py-2.5 px-3">Semantic Score</th>
+                      <th className="py-2.5 px-3">Classification</th>
+                      <th className="py-2.5 px-3">Review Status</th>
+                      <th className="py-2.5 px-3 text-right">Officer Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredRelationships.map((item) => {
+                      const pct = Math.round(item.semantic_similarity * 100);
+                      const isPending = item.status === 'PENDING_REVIEW';
+                      const isApproved = item.status === 'APPROVED_LINK';
+                      const isDismissed = item.status === 'DISMISSED';
+
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                          {/* Pair references */}
+                          <td className="py-3 px-3">
+                            <div className="space-y-1">
+                              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                <span>{item.source_reference}</span>
+                                <ArrowRight className="w-3 h-3 text-slate-400" />
+                                <span>{item.candidate_reference}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 max-w-xs truncate" title={item.source_title}>
+                                Source: {item.source_title}
+                              </div>
+                              <div className="text-[11px] text-slate-600 max-w-xs truncate font-medium" title={item.candidate_title}>
+                                Target: {item.candidate_title}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Institution */}
+                          <td className="py-3 px-3">
+                            <div className="space-y-0.5">
+                              <div className="font-semibold text-slate-800">{item.institution_name}</div>
+                              <div className="text-[11px] text-slate-500 font-mono">PID: {item.permanent_id}</div>
+                              <span className="inline-block px-1.5 py-0.2 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                                Verified Match
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Bureau Context */}
+                          <td className="py-3 px-3">
+                            <div className="space-y-1">
+                              {item.is_cross_bureau ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 rounded">
+                                  <GitCompare className="w-3 h-3" /> Cross-Bureau
+                                </span>
+                              ) : (
+                                <span className="inline-block px-2 py-0.5 text-[10px] bg-slate-100 text-slate-700 border border-slate-200 rounded">
+                                  Internal Bureau
+                                </span>
+                              )}
+                              <div className="text-[11px] text-slate-500">
+                                {item.source_bureau || 'PGRC'} vs {item.candidate_bureau || 'RB'}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Semantic Score */}
+                          <td className="py-3 px-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between font-bold text-slate-800">
+                                <span>{pct}%</span>
+                                <span className="text-[10px] text-slate-400">({item.semantic_similarity.toFixed(3)})</span>
+                              </div>
+                              <div className="w-24 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${pct >= 80 ? 'bg-emerald-600' : pct >= 70 ? 'bg-amber-500' : 'bg-slate-400'
+                                    }`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Classification */}
+                          <td className="py-3 px-3">
+                            {item.match_classification === 'POSSIBLY_RELATED' && (
+                              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                Possibly Related
+                              </span>
+                            )}
+                            {item.match_classification === 'NEEDS_REVIEW' && (
+                              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                Needs Review
+                              </span>
+                            )}
+                            {item.match_classification === 'DIFFERENT_ISSUE' && (
+                              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-300">
+                                Different Issue
+                              </span>
+                            )}
+                            {item.match_classification === 'INSTITUTION_UNCONFIRMED' && (
+                              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800 border border-red-300">
+                                Unconfirmed Inst.
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-3 px-3">
+                            {isPending && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                <Clock className="w-3 h-3" /> Pending Review
+                              </span>
+                            )}
+                            {isApproved && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <CheckCircle className="w-3 h-3" /> Approved Link
+                              </span>
+                            )}
+                            {isDismissed && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                                <XCircle className="w-3 h-3" /> Dismissed
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => setComparingItem(item)}
+                                className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition"
+                              >
+                                Compare Evidence
+                              </button>
+
+                              {isPending && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setReviewingItem(item);
+                                      setReviewDecision('APPROVE_LINK');
+                                      setReviewNotes('Approved relationship based on verifiable semantic & institutional overlap.');
+                                    }}
+                                    className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded border border-emerald-300 transition"
+                                    title="Approve Link"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setReviewingItem(item);
+                                      setReviewDecision('DISMISS');
+                                      setReviewNotes('Dismissed: Complaints represent distinct administrative issues.');
+                                    }}
+                                    className="p-1 bg-red-100 hover:bg-red-200 text-red-800 rounded border border-red-300 transition"
+                                    title="Dismiss Suggestion"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Right Column (4 cols): RAG Window */}
+        <div className="xl:col-span-4">
+          <div className="bg-white rounded-xl shadow-soft border border-slate-200/90 flex flex-col h-[650px] overflow-hidden sticky top-6">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-royal-deep to-royal-main p-4 text-white flex items-center justify-between shrink-0 shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+                  <Bot className="w-5 h-5 text-sky-200" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm tracking-tight">RAG Window</h3>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  </div>
+                  <p className="text-[10px] text-sky-100/80 font-mono">Retrieval-Augmented Intelligence</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setRagMessages([
+                    {
+                      id: 'welcome',
+                      sender: 'assistant',
+                      text: 'How can I help you? ',
+                      timestamp: 'Just now',
+                    },
+                  ]);
+                  setRagIsThinking(false);
+                }}
+                className="p-1.5 hover:bg-white/10 rounded text-sky-200 hover:text-white transition cursor-pointer"
+                title="Reset Chat"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Quick prepared question chip */}
+            <div className="p-3 bg-blue-50/70 border-b border-blue-100 flex flex-col gap-1.5 shrink-0">
+              <span className="text-[10px] font-bold text-royal-main uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-royal-main" /> Prepared RAG Question (Click to Ask)
+              </span>
+              <button
+                onClick={() => handleRagSubmit(undefined, PREPARED_QUESTION)}
+                disabled={ragIsThinking}
+                className="text-left text-[11px] font-medium text-slate-700 bg-white hover:bg-blue-100/70 p-2.5 rounded-lg border border-blue-200/90 transition text-balance flex items-start gap-2 cursor-pointer shadow-2xs"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-royal-main shrink-0 mt-0.5" />
+                <span>{PREPARED_QUESTION}</span>
+              </button>
+            </div>
+
+            {/* Chat message history body */}
+            <div className="flex-1 p-3.5 overflow-y-auto space-y-3 bg-slate-50/50">
+              {ragMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {msg.sender === 'assistant' && (
+                    <div className="w-6 h-6 rounded-full bg-royal-main text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Bot className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.sender === 'user'
+                      ? 'bg-royal-main text-white rounded-br-2xs'
+                      : 'bg-white text-slate-800 border border-slate-200 shadow-2xs rounded-bl-2xs'
+                      }`}
+                  >
+                    <div className="whitespace-pre-line">{msg.text}</div>
+                    <div
+                      className={`text-[9px] mt-1 text-right ${msg.sender === 'user' ? 'text-blue-100/80' : 'text-slate-400'
+                        }`}
+                    >
+                      {msg.timestamp}
+                    </div>
+                  </div>
+                  {msg.sender === 'user' && (
+                    <div className="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <UserIcon className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* 2-Second Thinking Indicator */}
+              {ragIsThinking && (
+                <div className="flex gap-2 justify-start">
+                  <div className="w-6 h-6 rounded-full bg-royal-main text-white flex items-center justify-center shrink-0 shadow-2xs animate-pulse">
+                    <Bot className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="bg-white border border-blue-200 text-royal-main rounded-xl rounded-bl-2xs px-3 py-2 text-xs shadow-2xs flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-royal-main" />
+                    <span className="font-medium text-[11px]">Thinking... (retrieving embeddings)</span>
+                    <div className="flex gap-1 ml-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-royal-main animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-royal-main animate-bounce [animation-delay:0.2s]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-royal-main animate-bounce [animation-delay:0.4s]"></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatBottomRef} />
+            </div>
+
+            {/* Input Form Bar */}
+            <form onSubmit={(e) => handleRagSubmit(e)} className="p-2.5 bg-white border-t border-slate-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ragInput}
+                  onChange={(e) => setRagInput(e.target.value)}
+                  placeholder="Ask a question and press Enter..."
+                  disabled={ragIsThinking}
+                  className="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-royal-main"
+                />
+                <button
+                  type="submit"
+                  disabled={!ragInput.trim() || ragIsThinking}
+                  className={`p-2 rounded-lg text-white transition flex items-center justify-center ${!ragInput.trim() || ragIsThinking
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    : 'bg-royal-main hover:bg-royal-deep cursor-pointer shadow-soft'
+                    }`}
+                  title="Send Question"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
 
       {/* Section D: Evidence Comparison Modal */}
@@ -753,9 +957,8 @@ export const AIRelationshipPage: React.FC = () => {
       {reviewingItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden">
-            <div className={`p-4 text-white flex items-center justify-between ${
-              reviewDecision === 'APPROVE_LINK' ? 'bg-emerald-800' : 'bg-red-800'
-            }`}>
+            <div className={`p-4 text-white flex items-center justify-between ${reviewDecision === 'APPROVE_LINK' ? 'bg-emerald-800' : 'bg-red-800'
+              }`}>
               <div className="flex items-center gap-2 font-bold text-sm">
                 {reviewDecision === 'APPROVE_LINK' ? (
                   <CheckCircle className="w-5 h-5 text-emerald-300" />
@@ -817,11 +1020,10 @@ export const AIRelationshipPage: React.FC = () => {
               <button
                 onClick={handleSubmitReview}
                 disabled={submittingReview || !reviewNotes.trim()}
-                className={`px-4 py-1.5 text-xs font-semibold rounded text-white transition ${
-                  reviewDecision === 'APPROVE_LINK'
-                    ? 'bg-emerald-700 hover:bg-emerald-800'
-                    : 'bg-red-700 hover:bg-red-800'
-                } ${submittingReview || !reviewNotes.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-4 py-1.5 text-xs font-semibold rounded text-white transition ${reviewDecision === 'APPROVE_LINK'
+                  ? 'bg-emerald-700 hover:bg-emerald-800'
+                  : 'bg-red-700 hover:bg-red-800'
+                  } ${submittingReview || !reviewNotes.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {submittingReview ? 'Submitting...' : 'Record Official Decision'}
               </button>

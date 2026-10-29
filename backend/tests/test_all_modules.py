@@ -40,9 +40,9 @@ def test_institution_duplicate_permanent_id_rejected():
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Attempt to create an institution with duplicate Permanent ID "DEMO-AICTE-001"
+    # Attempt to create an institution with duplicate Permanent ID "1-44642766198"
     dup_res = client.post("/api/institutions", headers=headers, json={
-        "permanent_id": "DEMO-AICTE-001",
+        "permanent_id": "1-44642766198",
         "institution_name": "Duplicate Institute Attempt",
         "institution_type": "Engineering & Technology",
         "address": "123 Random Road",
@@ -63,19 +63,19 @@ def test_institution_search_and_profile():
     headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
 
     # Search by Permanent ID
-    search_res = client.get("/api/institutions?search=DEMO-AICTE-001", headers=headers)
+    search_res = client.get("/api/institutions?search=1-44642766198", headers=headers)
     assert search_res.status_code == 200
     data = search_res.json()
     assert len(data) >= 1
     inst = data[0]
-    assert inst["permanent_id"] == "DEMO-AICTE-001"
+    assert inst["permanent_id"] == "1-44642766198"
     assert inst["active_cases"] >= 2 # Overlap exists!
 
     # Retrieve Consolidated Profile
     profile_res = client.get(f"/api/institutions/{inst['id']}", headers=headers)
     assert profile_res.status_code == 200
     profile = profile_res.json()
-    assert profile["permanent_id"] == "DEMO-AICTE-001"
+    assert profile["permanent_id"] == "1-44642766198"
     assert len(profile["involved_bureaus"]) >= 2
 
 def test_deterministic_overlap_detection():
@@ -91,8 +91,8 @@ def test_deterministic_overlap_detection():
     overlaps = res.json()
     assert len(overlaps) >= 1
 
-    # Check Demo Institute A overlap details
-    inst_a_overlap = next((o for o in overlaps if o["permanent_id"] == "DEMO-AICTE-001"), None)
+    # Check Galgotias College overlap details
+    inst_a_overlap = next((o for o in overlaps if o["permanent_id"] == "1-44642766198"), None)
     assert inst_a_overlap is not None
     assert inst_a_overlap["detection_type"] == "DETERMINISTIC_PERMANENT_ID"
     assert len(inst_a_overlap["involved_cases"]) >= 2
@@ -295,11 +295,11 @@ def test_institution_update_duplicate_permanent_id_rejected():
     login_res = client.post("/api/auth/login", json={"username_or_email": "admin", "password": "Admin@123"})
     headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
 
-    # Attempt to update Institution 2's permanent ID to DEMO-AICTE-001 (which belongs to Institution 1)
+    # Attempt to update Institution 2's permanent ID to 1-44642766198 (which belongs to Institution 1)
     res = client.put(
         "/api/institutions/2",
         headers=headers,
-        json={"permanent_id": "DEMO-AICTE-001"}
+        json={"permanent_id": "1-44642766198"}
     )
     assert res.status_code == 400
     assert "already exists" in res.json()["detail"]
